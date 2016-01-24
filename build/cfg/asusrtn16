@@ -1,0 +1,9 @@
+# Base configuration
+# 47xx are little endian - https://dev.openwrt.org/wiki/platforms
+# brcm47xx	Broadcom BCM47xx/53xx	MIPS	little	nbd, mbm, pavlov	brcm47xx
+X_BUILD_BASE_CFG="mipsel"
+
+KERNCONF=BCM471x
+
+# Building the firmware image
+X_BUILD_BUILD_IMG_DEFAULTS=""
