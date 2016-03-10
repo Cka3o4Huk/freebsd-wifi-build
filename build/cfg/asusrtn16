@@ -6,4 +6,4 @@ X_BUILD_BASE_CFG="mipsel"
 KERNCONF=BCM471x
 
 # Building the firmware image
-X_BUILD_BUILD_IMG_DEFAULTS=""
+X_BUILD_BUILD_IMG_DEFAULTS="mfsroot fsimage"
