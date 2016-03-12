@@ -18,7 +18,7 @@ fi
 
 # This builds a tplink system image from the given kernel and MFS.
 
-TRX_KERNEL=${X_KERNEL}
+TRX_KERNEL=${X_KERNEL}.tramp.bin
 
 # gzip or lzma the kernel image
 if [ x${TRX_COMPRESSION_GZIP} = "xYES" ]; then
@@ -49,7 +49,7 @@ X_ROOTFS_SKIPOPT="-c"
 #fi
 
 TRX_MKTRXFW="${SCRIPT_DIR}/../../programs/mktrxfw/mktrxfw"
-TRX_LZMALOADER="${SCRIPT_DIR}/../../programs/mktrxfw/loader.gzip"
+TRX_LZMALOADER="${SCRIPT_DIR}/../../programs/mktrxfw/loader.gz"
 
 ${SCRIPT_DIR}/../../programs/mktrxfw/mktrxfw -c ${TRX_LZMALOADER} ${TRX_KERNEL} ${X_FSIMAGE}${X_FSIMAGE_SUFFIX} ${X_TFTPBOOT}/${CFGNAME}.trx
 
