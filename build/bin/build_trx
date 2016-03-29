@@ -22,13 +22,13 @@ TRX_KERNEL=${X_KERNEL}.tramp.bin
 
 # gzip or lzma the kernel image
 if [ x${TRX_COMPRESSION_GZIP} = "xYES" ]; then
-	cat ${X_KERNEL} | gzip -9 | dd of=${X_KERNEL}.gz
-	TRX_KERNEL=${X_KERNEL}.gz
+	cat ${TRX_KERNEL} | gzip -9 | dd of=${TRX_KERNEL}.gz
+	TRX_KERNEL=${TRX_KERNEL}.gz
 fi
 
 if [ x${TRX_COMPRESSION_LZMA} = "xYES" ]; then
-	/usr/local/bin/lzma e ${X_KERNEL} ${X_KERNEL}.lzma || exit 1
-	TRX_KERNEL=${X_KERNEL}.lzma
+	/usr/local/bin/lzma e ${TRX_KERNEL} ${TRX_KERNEL}.lzma || exit 1
+	TRX_KERNEL=${TRX_KERNEL}.lzma
 fi
 
 # build mktrxfw if not built or needs a refresh
