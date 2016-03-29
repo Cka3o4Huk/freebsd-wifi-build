@@ -4,6 +4,13 @@
 X_BUILD_BASE_CFG="mipsel"
 
 KERNCONF=BCM471x
+TRX_COMPRESSION_GZIP=YES
+
+X_MAKEFS_ENDIAN=le
+
+#X_FSIMAGE_CMD="mkulzma"
+#X_FSIMAGE_ARGS="-s 65536 -v"
+#X_FSIMAGE_SUFFIX=".ulzma"
 
 # Building the firmware image
-X_BUILD_BUILD_IMG_DEFAULTS="mfsroot fsimage"
+X_BUILD_BUILD_IMG_DEFAULTS="mfsroot fsimage trx"

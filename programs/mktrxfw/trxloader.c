@@ -1,27 +1,9 @@
-#include <sys/types.h>
-
-#define FLASHADDR 			0xbc000000
-#define TARGETADDR			0x80800000 // Trampoline
-#define FAIL				0x00000004 // CFE exception
-#define FAIL2				0x00000008 // CFE exception
-#define FAIL3				0x00000010 // CFE exception
-#define MAGIC				0x30524448 // "HDR0"
-#define NUM_OFFSETS			3
-
-struct trx_header {
-	u_int32_t magic;
-	u_int32_t file_length;
-	u_int32_t crc32;
-	u_int16_t flags;
-	u_int16_t version;
-	u_int32_t offsets[NUM_OFFSETS];
-};
+#include "trxloader.h"
 
 void _startC(register_t a0, register_t a1, register_t a2, register_t a3){
 	__asm__ __volatile__(
-			/* Make sure KSEG0 is uncached */
-			"li		$t0, 0x2\n"
-			"mtc0	$t0, $16\n"
+			"lui	$t0, 0x80ff\n"
+			"move 	$sp, $t0\n"
 			"ehb");
 
 	uint32_t* ptr = (unsigned int*)FLASHADDR;
@@ -39,14 +21,62 @@ void _startC(register_t a0, register_t a1, register_t a2, register_t a3){
 		uint32_t* dst = (uint32_t*)TARGETADDR;
 
 		entry_point = (void*)TARGETADDR;
-		while(size > 0){
-			*dst = *kstart;
-			size -= 4;
-			kstart++;
-			dst++;
+		size_t res = tinfl_decompress_mem_to_mem((uint32_t*)TARGETADDR, 0x700000, kstart, size, TINFL_FLAG_PARSE_GZIP_HEADER);
+
+		if(res > 0x800000){
+			entry_point = (void*)FAIL3;
+			entry_point(res,a1,a2,a3);
 		}
+
 		entry_point(a0,a1,a2,a3);
 	}
 	entry_point(a0,a1,a2,a3);
 }
 
+void * memcpy(void *o_dst, const void *o_src, size_t len){
+	size_t size = len;
+	uint32_t* dst = o_dst;
+	uint32_t* src = (uint32_t*)o_src;
+
+	while(size >= sizeof(uint32_t)){
+		*dst = *src;
+		size -= sizeof(uint32_t);
+		src++;
+		dst++;
+	}
+
+	uint8_t* bdst = (uint8_t*)dst;
+	uint8_t* bsrc = (uint8_t*)src;
+	while(size > 0){
+		*bdst = *bsrc;
+		size -= 1;
+		bsrc++;
+		bdst++;
+	}
+
+	return o_dst;
+}
+
+void * memset(void *b, int c, size_t len){
+	size_t size = len;
+	uint32_t* dst = b;
+	uint8_t short_value = (uint8_t)c;
+	uint32_t value = short_value;
+	uint32_t word = (value << 24) | (value << 16) | (value << 8) | value;
+
+	while(size >= sizeof(uint32_t)){
+		*dst = word;
+		size -= sizeof(uint32_t);
+		dst++;
+	}
+
+	uint8_t* bdst = (uint8_t*)dst;
+
+	while(size > 0){
+		*bdst = short_value;
+		size -= 1;
+		bdst++;
+	}
+
+	return b;
+}
