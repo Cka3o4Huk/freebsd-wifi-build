@@ -23,7 +23,7 @@ void _startC(register_t a0, register_t a1, register_t a2, register_t a3){
 		entry_point = (void*)TARGETADDR;
 		size_t res = tinfl_decompress_mem_to_mem((uint32_t*)TARGETADDR, 0x700000, kstart, size, TINFL_FLAG_PARSE_GZIP_HEADER);
 
-		if(res > 0x800000){
+		if(res > 0x900000){
 			entry_point = (void*)FAIL3;
 			entry_point(res,a1,a2,a3);
 		}
