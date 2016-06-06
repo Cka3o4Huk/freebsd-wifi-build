@@ -11,7 +11,7 @@
 #include <sys/types.h>
 
 #define FLASHADDR 			0xbc000000
-#define TARGETADDR			0x80800000 // Trampoline
+#define TARGETADDR			0x80900000 // Trampoline
 #define FAIL				0x00000004 // CFE exception
 #define FAIL2				0x00000008 // CFE exception
 #define FAIL3				0x00000010 // CFE exception
