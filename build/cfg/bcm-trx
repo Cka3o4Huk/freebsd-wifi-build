@@ -19,10 +19,8 @@ X_FSIMAGE_SUFFIX=".ulzma"
 X_BUILD_BUILD_IMG_DEFAULTS="mfsroot fsimage trx"
 
 # MFS options
-X_MFS_USB=yes
-
-# For time being
 X_MFS_KERBEROS=yes
+X_MFS_USB=yes
 
 BIN_CFG_PARTITION='`ls /dev/flash/*.cfg`'
 BIN_CFG_SIZE="65536"
