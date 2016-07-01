@@ -272,7 +272,7 @@ if [ "x${X_MFS_USB}" == "xyes" ]; then
 fi
 
 #usb
-if [ "x${X_MFS_USB}" == "xyes" ]; then
+if [ "${X_MFS_USB}" == "yes" ]; then
 	${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/sbin/usbconfig ${X_STAGING_FSROOT}/usr/sbin/
 	${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/libusb.so.3 ${X_STAGING_FSROOT}/usr/lib/
 fi
