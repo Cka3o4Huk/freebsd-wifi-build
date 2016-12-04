@@ -1,6 +1,7 @@
 RM?=	rm
 LDFLAGS+=	-lz -lcrypto
 PREFIX?=	/usr/local
+CC=	cc
 MIPSCC!=(pkg info -l mips-gcc | grep '\-gcc$$')
 MIPSOBJECTS=trxloader.o tinfl.o mem.o
 MIPSCFLAGS=-EL -O1 -g -fno-pic -mno-abicalls -nostdlib -I/usr/include
@@ -13,7 +14,7 @@ install:
 	install -m 0755 mktrxfw ${PREFIX}/bin
 
 mktrxfw: 
-	cc -g mktrxfw.c crc32.c -o mktrxfw
+	$(CC) -g -O0 mktrxfw.c utils.c fw_trx.c crc32.c -o mktrxfw
 
 loader.elf: $(MIPSOBJECTS)
 	$(MIPSCC) -g -EL -nostdlib $(MIPSOBJECTS) -Xlinker -T -Xlinker loader.lds -o loader.elf
@@ -29,7 +30,7 @@ loader.gz: loader
 	$(GZIP) loader > loader.gz.unaligned
 	@(head -c $$((4-$$(stat -f "%z" loader.gz.unaligned)%4)) /dev/zero > loader.gz.zero)
 	cat loader.gz.unaligned loader.gz.zero > loader.gz
-	rm loader.gz.unaligned loader.gz.zero
+	$(RM) loader.gz.unaligned loader.gz.zero
 
 clean:
 	$(RM) -f loader.elf loader loader.gz* mktrxfw *.o
