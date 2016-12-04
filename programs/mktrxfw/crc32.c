@@ -13,14 +13,9 @@
 
 #include <sys/cdefs.h>
 __FBSDID("$FreeBSD: stable/10/usr.bin/cksum/crc32.c 200462 2009-12-13 03:14:06Z delphij $");
-
-#include <sys/types.h>
-
-#include <stdio.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <unistd.h>
-
-#include "extern.h"
 
 #define CRC(crc, ch)	 (crc = (crc >> 8) ^ crctab[(crc ^ (ch)) & 0xff])
 
