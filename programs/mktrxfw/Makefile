@@ -14,7 +14,7 @@ install:
 	install -m 0755 mktrxfw ${PREFIX}/bin
 
 mktrxfw: 
-	$(CC) -g -O0 mktrxfw.c utils.c fw_trx.c crc32.c -o mktrxfw
+	$(CC) -g -O0 main.c utils.c fw_trx.c crc32.c -o mktrxfw
 
 loader.elf: $(MIPSOBJECTS)
 	$(MIPSCC) -g -EL -nostdlib $(MIPSOBJECTS) -Xlinker -T -Xlinker loader.lds -o loader.elf
