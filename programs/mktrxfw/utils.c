@@ -164,9 +164,9 @@ utils_read(const char* filename, struct fw_methods *api)
 		return -1;
 	}
 
-	printf("======= %s =========\n", filename);
+	printf("====== %s ======\n", filename);
 	err = api->print_header(fd);
-	printf("====================\n");
+	printf("==================\n");
 
 	close(fd);
 	return err;
