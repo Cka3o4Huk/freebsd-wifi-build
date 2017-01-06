@@ -81,12 +81,12 @@ fw_trx_print(int fd)
 	for (i = 0; i < NUM_OFFSETS; i++)
 		READ_HEADER(header.offsets[i]);
 
-	printf("magic = 0x%04x\n", header.magic);
-	printf("length = %d\n", header.file_length);
-	printf("crc32 = 0x%04x\n", header.crc32);
-	printf("~crc32 = 0x%04x\n", ~header.crc32);
-	printf("flags = 0x%04x\n", header.flags);
-	printf("version = %d\n", header.version);
+	printf("magic\t= 0x%04x\n", header.magic);
+	printf("length\t= %d\n", header.file_length);
+	printf("crc32\t= 0x%04x\t", header.crc32);
+	printf("~crc32\t= 0x%04x\n", ~header.crc32);
+	printf("flags\t= 0x%04x\n", header.flags);
+	printf("version\t= %d\n", header.version);
 
 	for (i = 0; i < NUM_OFFSETS; i++)
 		printf("offset[%d] = %d\n", i, header.offsets[i]);
@@ -163,7 +163,7 @@ fw_trx_crc(struct fw_ctx* ctx)
 		return -1;
 	}
 
-	printf("crc32 for %s\n", ctx->output);
+	printf(" * %s\n", ctx->output);
 	crc32(fd, &crc, &size);
 	close(fd);
 
@@ -173,7 +173,7 @@ fw_trx_crc(struct fw_ctx* ctx)
 			return -1;
 		}
 
-		printf("crc32 for %s\n", tmp->name);
+		printf(" * %s\n", tmp->name);
 		crc32(fd, &crc, &size);
 		close(fd);
 	}
