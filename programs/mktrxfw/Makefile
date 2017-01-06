@@ -1,6 +1,7 @@
 RM?=	rm
 LDFLAGS+=	-lz -lcrypto
 PREFIX?=	/usr/local
+TRXSRC=	main.c utils.c fw_trx.c crc32.c
 CC=	cc
 MIPSCC=mips-portbld-freebsd10.2-gcc
 MIPSOBJECTS=trxloader.o tinfl.o mem.o
@@ -14,7 +15,7 @@ install:
 	install -m 0755 mktrxfw ${PREFIX}/bin
 
 mktrxfw: 
-	$(CC) -g -O0 main.c utils.c fw_trx.c crc32.c -o mktrxfw
+	$(CC) -g -O0 $(TRXSRC) -o mktrxfw
 
 loader.elf: $(MIPSOBJECTS)
 	$(MIPSCC) -g -EL -nostdlib $(MIPSOBJECTS) -Xlinker -T -Xlinker loader.lds -o loader.elf
