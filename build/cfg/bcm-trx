@@ -16,7 +16,7 @@ X_FSIMAGE_ARGS="-s 65536 -v"
 X_FSIMAGE_SUFFIX=".ulzma"
 
 # Building the firmware image
-X_BUILD_BUILD_IMG_DEFAULTS="mfsroot fsimage trx"
+X_BUILD_BUILD_IMG_DEFAULTS="mfsroot makepkgs addpkgs fsimage trx"
 
 # MFS options
 X_MFS_KERBEROS=yes
@@ -24,3 +24,7 @@ X_MFS_USB=yes
 
 BIN_CFG_PARTITION='`ls /dev/flash/*.cfg /dev/cfi*.cfg`'
 BIN_CFG_SIZE="65536"
+
+#Packages
+#X_PACKAGELIST="dropbear dnsmasq lua lzo2 openvpn"
+X_PACKAGELIST="lzo2"
