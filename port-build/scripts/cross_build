@@ -30,7 +30,7 @@ if [ "x${X_PORTBUILD_PLATFORM}" = "x" ]; then
 fi
 
 # Verify this is a platform we know about
-if [ "${X_PORTBUILD_PLATFORM}" != "mips" ]; then
+if [ "${X_PORTBUILD_PLATFORM}" != "mips" && "${X_PORTBUILD_PLATFORM}" != "mipsel" ]; then
 	echo "ERROR: for now, we only support mips."
 	exit 1
 fi
