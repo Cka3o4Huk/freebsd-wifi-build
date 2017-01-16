@@ -35,4 +35,6 @@ TPLINK_HARDWARE_FLASHID=16M
 TPLINK_FIRMWARE_RESERV=0x20000
 
 # Building the firmware image
-X_BUILD_BUILD_IMG_DEFAULTS="mfsroot fsimage tplink"
+X_BUILD_BUILD_IMG_DEFAULTS="mfsroot makepkgs addpkgs fsimage tplink"
+#X_PACKAGELIST="dropbear dnsmasq lua lzo2 openvpn openconnect"
+X_PACKAGELIST="openconnect"
