@@ -1,13 +1,11 @@
 # Banana Pi R1 configuration
 # 
+X_BUILD_BASE_CFG="armv6"
 
 BUILDNAME=bpir1
-TARGET=arm
-TARGET_ARCH=arm
-TARGET_CPUTYPE=armv6
 KERNCONF=ALLWINNER
 KERN_NO_TARGET_CPUTYPE="yes"
-LOCAL_DIRS="tools/tools/ath     tools/tools/net80211/wlanstats"
+LOCAL_DIRS="tools/tools/ath tools/tools/net80211/wlanstats"
 
 #TRX_COMPRESSION_GZIP=YES
 
