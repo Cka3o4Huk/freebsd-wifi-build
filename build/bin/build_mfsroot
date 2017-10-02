@@ -322,7 +322,7 @@ ${INSTALL_DEF_BIN} ${X_DESTDIR}/sbin/route ${X_STAGING_FSROOT}/sbin/
 ${INSTALL_DEF_BIN} ${X_DESTDIR}/sbin/ping ${X_STAGING_FSROOT}/sbin/
 ${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/bin/netstat ${X_STAGING_FSROOT}/usr/bin/
 ${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/sbin/arp ${X_STAGING_FSROOT}/usr/sbin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/sbin/tcpdump ${X_STAGING_FSROOT}/usr/sbin/
+#${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/sbin/tcpdump ${X_STAGING_FSROOT}/usr/sbin/
 
 
 ${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/sbin/hostapd ${X_STAGING_FSROOT}/usr/sbin/
