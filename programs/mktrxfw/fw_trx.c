@@ -43,6 +43,7 @@
 #define	TRX_VERSION			1
 #define	TRX_HEADER_SIZE			28
 #define	NUM_OFFSETS			3
+#define TRX_ALIGNMENT			0x2000
 
 static int	fw_trx_crc(struct fw_ctx* ctx);
 static int	fw_trx_get_headersize(void);
@@ -59,13 +60,15 @@ struct trx_header {
 	uint32_t offsets[NUM_OFFSETS];
 };
 
-struct fw_methods fw_trx = {
+struct fw_methods fw = {
 	.get_headersize	= fw_trx_get_headersize,
 	.print_header	= fw_trx_print,
 	.calculate_crc	= fw_trx_crc,
 	.init_header	= fw_trx_init,
 	.write_header 	= fw_trx_write
 };
+
+char 	*fw_create_args = "lzmaloader lzmakernel fsimage";
 
 static int
 fw_trx_print(int fd)
@@ -120,8 +123,8 @@ fw_trx_init(struct fw_ctx* ctx)
 
 	/* calculate TRX header offsets */
 	TAILQ_FOREACH_SAFE(file, &ctx->files, entries, safe) {
-		/* align last offset to sector size (512) */
-		if (!(TAILQ_NEXT(file, entries)) && (offset % 0x200)) {
+		/* align last offset to 8Kb (16 sectors) */
+		if (!(TAILQ_NEXT(file, entries)) && (offset % TRX_ALIGNMENT)) {
 			/* file for zeros */
 			tmp = malloc(sizeof(struct fw_fileentry));
 			if (tmp == NULL) {
@@ -129,14 +132,14 @@ fw_trx_init(struct fw_ctx* ctx)
 				return -1;
 			}
 			tmp->name = ".zeros";
-			tmp->size = 0x200 - offset % 0x200;
+			tmp->size = TRX_ALIGNMENT - offset % TRX_ALIGNMENT;
 			tmp->indx = -1; /* fake file */
 			TAILQ_INSERT_BEFORE(file, tmp, entries);
 
 			if (utils_fpad_zero(tmp->name, tmp->size) < 0)
 				return -1;
 
-			offset = (offset / 0x200 + 1) * 0x200;
+			offset = (offset / TRX_ALIGNMENT + 1) * TRX_ALIGNMENT;
 
 		}
 		header->offsets[file->indx] = offset;
@@ -180,7 +183,7 @@ fw_trx_crc(struct fw_ctx* ctx)
 
 	header = (struct trx_header*) ctx->header;
 	/* Inverse */
-	header->crc32 = ~crc;
+	header->crc32 = ~crc32_total;
 	return 0;
 }
 

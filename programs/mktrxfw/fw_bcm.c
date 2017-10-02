@@ -80,7 +80,7 @@ static int	fw_bcm_init(struct fw_ctx* ctx);
 static int	fw_bcm_print(int fd);
 static int	fw_bcm_write(void* header, int fd, int mode);
 
-struct fw_methods fw_trx = {
+struct fw_methods fw_chk = {
 	.get_headersize	= fw_bcm_get_headersize,
 	.print_header	= fw_bcm_print,
 	.calculate_crc	= fw_bcm_crc,
