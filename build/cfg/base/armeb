@@ -5,3 +5,5 @@ TARGET_CPUTYPE=xscale
 KERNCONF=AVILA
 KERN_NO_TARGET_CPUTYPE="yes"
 LOCAL_DIRS="tools/tools/ath     tools/tools/net80211/wlanstats"
+
+X_PORTBUILD_PLATFORM="armeb"
