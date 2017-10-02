@@ -150,6 +150,23 @@ while [ -n "$1" ]; do
 	if [ "${TARGET_CROSS_TOOLCHAIN}" != "" ]; then
 		X_CROSS_TOOLCHAIN="CROSS_TOOLCHAIN=${TARGET_CROSS_TOOLCHAIN}"
 	fi
+	
+	echo env MAKEOBJDIRPREFIX=${X_MAKEOBJDIRPREFIX}		\
+	    make -s ${BUILD_FLAGS} DB_FROM_SRC=1		\
+	    ${X_CROSS_TOOLCHAIN}				\
+	    TARGET=${TARGET}					\
+	    TARGET_ARCH=${TARGET_ARCH}				\
+	    ${X_TARGET_CPUTYPE}					\
+	    KERNCONF=${KERNCONF}				\
+	    KODIR=/boot/kernel.${KERNCONF}/			\
+	    ${X_DESTDIR_LINE}					\
+	    KMODDIR=/boot/kernel.${KERNCONF}/			\
+	    __MAKE_CONF=${X_DESTDIR}/../make.conf.${BUILDNAME}	\
+	    SRCCONF=${X_DESTDIR}/../src.conf.${BUILDNAME}	\
+	    LOCAL_DIRS="${LOCAL_DIRS}"				\
+	    ${X_FDT_DTS_FILE}					\
+	    ${X_LOCAL_TOOL_DIRS}				\
+	    $1
 
 	env MAKEOBJDIRPREFIX=${X_MAKEOBJDIRPREFIX}		\
 	    make -s ${BUILD_FLAGS} DB_FROM_SRC=1		\
