@@ -49,9 +49,15 @@ X_ROOTFS_SKIPOPT="-c"
 #fi
 
 TRX_MKTRXFW="${SCRIPT_DIR}/../../programs/mktrxfw/mktrxfw"
-TRX_LZMALOADER="${SCRIPT_DIR}/../../programs/mktrxfw/loader.gz"
+TRX_GZIPLOADER="${SCRIPT_DIR}/../../programs/mktrxfw/loader.gz"
+TRX_LZMALOADER="${SCRIPT_DIR}/../../programs/mktrxfw/loader.lzma"
 
-${SCRIPT_DIR}/../../programs/mktrxfw/mktrxfw -c ${TRX_LZMALOADER} ${TRX_KERNEL} ${X_FSIMAGE}${X_FSIMAGE_SUFFIX} ${X_TFTPBOOT}/${CFGNAME}.trx
+${SCRIPT_DIR}/../../programs/mktrxfw/mktrxfw -c ${TRX_GZIPLOADER} ${TRX_KERNEL} ${X_FSIMAGE}${X_FSIMAGE_SUFFIX} ${X_TFTPBOOT}/${CFGNAME}.trx
 
+${SCRIPT_DIR}/../../programs/mktrxfw/mktrxfw -c ${TRX_LZMALOADER} ${TRX_KERNEL} ${X_FSIMAGE}${X_FSIMAGE_SUFFIX} ${X_TFTPBOOT}/${CFGNAME}.lz.trx
+
+
+#let's make CHK file as well (to be useful for netgear routers)
+${SCRIPT_DIR}/../../programs/mktrxfw/mkchkfw -c ${X_TFTPBOOT}/${CFGNAME}.lz.trx ${X_TFTPBOOT}/${CFGNAME}.lz.chk
 
 exit 0
