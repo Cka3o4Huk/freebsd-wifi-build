@@ -54,19 +54,25 @@ struct fw_methods {
 	int	(*print_header) (int fd);
 };
 
-/* Known implementations */
-extern struct fw_methods fw_trx;
+extern struct fw_methods fw;
+extern char *fw_create_args;
 
 #define	NOCRC	0
 #define	WITHCRC	1
 
 #define	READ_HEADER(a)						\
 	do{							\
-		if(read(fd, &(a), sizeof(a)) < 0){ 	\
+		if(read(fd, &(a), sizeof(a)) < 0){ 		\
 			perror("can't read file"); 		\
 			return -1; 				\
 		}						\
 	} while(0);
+
+#define READ_HEADER_BE(a)					\
+	do{							\
+		READ_HEADER(a);					\
+		a = be32toh(a);					\
+	} while (0);
 
 #define	WRITE_HEADER(a)						\
 	do{							\
@@ -75,6 +81,13 @@ extern struct fw_methods fw_trx;
 			return -1; 				\
 		}						\
 	} while(0);
+
+#define	WRITE_HEADER_BE(a)					\
+	do {							\
+		a = htobe32(a);					\
+		WRITE_HEADER(a);				\
+		a = be32toh(a);					\
+	} while (0);
 
 int	utils_fpad_zero(char* output, int nzeros);
 int	utils_fappend(char* src, char* dst);

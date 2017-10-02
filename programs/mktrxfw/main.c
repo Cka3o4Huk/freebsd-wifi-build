@@ -40,16 +40,20 @@ static void	usage();
 static int	create_image(struct fw_methods* api, int nfiles,
 		    char** filenames, char* output);
 
+#define	FILEMAX	16
+
+char* filenames[FILEMAX];
+
 int main(int argc, char** argv){
 	if(argc > 1){
 		if ((strcmp("-v",argv[1]) == 0) && (argc == 3))
-			return utils_read(argv[2], &fw_trx);
-		if ((strcmp("-c",argv[1]) == 0) && (argc == 6)) {
-			char* filenames[3];
-			filenames[0] = argv[2];
-			filenames[1] = argv[3];
-			filenames[2] = argv[4];
-			return create_image(&fw_trx, 3, filenames, argv[5]);
+			return utils_read(argv[2], &fw);
+		if ((strcmp("-c",argv[1]) == 0) && (argc > 3)) {
+			int size = argc - 3;
+			for (int i = 0; i < size; i++)
+				filenames[i] = argv[i + 2];
+
+			return create_image(&fw, size, filenames, argv[argc - 1]);
 		}
 	}
 	usage(argv[0]);
@@ -58,7 +62,7 @@ int main(int argc, char** argv){
 
 void usage(char* progname){
 	printf("usage: %s [-v] filename\n",progname);
-	printf("       %s [-c] lzmaloader lzmakernel fsimage output\n",progname);
+	printf("       %s [-c] %s output\n", progname, fw_create_args);
 	return;
 }
 

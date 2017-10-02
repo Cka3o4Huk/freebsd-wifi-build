@@ -35,3 +35,4 @@
 extern uint32_t crc32_total;
 
 int	crc32(int, uint32_t *, off_t *);
+int	csum2(int, uint32_t *, off_t *);
