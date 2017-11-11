@@ -19,8 +19,10 @@ X_FSIMAGE_SUFFIX=".ulzma"
 X_BUILD_BUILD_IMG_DEFAULTS="mfsroot makepkgs addpkgs fsimage trx"
 
 # MFS options (7171072 -> 7611392)
+MFSROOT_INC_MODULES="YES"
+MFSROOT_INC_MODULE_LIST="bgmac robosw"
 X_MFS_KERBEROS=no
-X_MFS_USB=np
+X_MFS_USB=yes
 
 BIN_CFG_PARTITION='`ls /dev/flash/*.cfg /dev/cfi*.cfg`'
 BIN_CFG_SIZE="65536"
