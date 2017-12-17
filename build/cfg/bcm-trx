@@ -3,6 +3,8 @@
 # brcm47xx	Broadcom BCM47xx/53xx	MIPS	little	nbd, mbm, pavlov	brcm47xx
 X_BUILD_BASE_CFG="mipsel"
 
+PARALLEL_FLAGS="-j4"
+
 KERNCONF=BCM
 TRX_COMPRESSION_GZIP=YES
 
