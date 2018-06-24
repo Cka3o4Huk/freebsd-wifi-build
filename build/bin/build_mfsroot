@@ -184,6 +184,9 @@ ${INSTALL_DEF_LIB} ${X_DESTDIR}/lib/libdevstat.so.7 ${X_STAGING_FSROOT}/lib/
 ${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/sbin/devinfo ${X_STAGING_FSROOT}/usr/sbin/
 ${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/libdevinfo.so.6 ${X_STAGING_FSROOT}/usr/lib/
 
+# top is useful too
+${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/bin/top ${X_STAGING_FSROOT}/usr/bin/
+
 # libraries are for grep, tar, cpio, df
 ${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/bin/tar ${X_STAGING_FSROOT}/usr/bin/
 ${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/bin/cpio ${X_STAGING_FSROOT}/usr/bin/
@@ -206,6 +209,7 @@ ${INSTALL_DEF_FILE} ${X_DESTDIR}/etc/dhclient.conf ${X_STAGING_FSROOT}/c/etc
 ${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/bin/cmp ${X_STAGING_FSROOT}/usr/bin/cmp
 ${INSTALL_DEF_BIN} ${X_DESTDIR}/sbin/resolvconf ${X_STAGING_FSROOT}/sbin/resolvconf
 ${INSTALL_DEF_BIN} ${X_DESTDIR}/libexec/resolvconf/libc ${X_STAGING_FSROOT}/libexec/resolvconf/libc
+${INSTALL_DEF_LIB} ${X_DESTDIR}/lib/casper/libcap_syslog.so.1 ${X_STAGING_FSROOT}/lib/casper/
 
 # network state tracking / management
 ${INSTALL_DEF_BIN} ${X_BASEDIR}/files/state/openvpn-up ${X_STAGING_FSROOT}/c/etc/state/
@@ -264,6 +268,10 @@ ${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/pam_rootok.so ${X_STAGING_FSROOT}/usr/li
 ${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/pam_securetty.so ${X_STAGING_FSROOT}/usr/lib
 ${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/pam_self.so ${X_STAGING_FSROOT}/usr/lib
 ${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/pam_ssh.so ${X_STAGING_FSROOT}/usr/lib
+#fix
+${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/libprivatessh.so.5 ${X_STAGING_FSROOT}/usr/lib/
+${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/libprivateldns.so.5 ${X_STAGING_FSROOT}/usr/lib/
+#end
 ${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/pam_unix.so ${X_STAGING_FSROOT}/usr/lib
 ${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/libypclnt.so.4 ${X_STAGING_FSROOT}/usr/lib
 ${INSTALL_DEF_FILE} ${X_DESTDIR}/etc/nsswitch.conf ${X_STAGING_FSROOT}/c/etc/nsswitch.conf
@@ -293,8 +301,8 @@ ${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/bin/tftp ${X_STAGING_FSROOT}/usr/bin/
 
 if [ "x${X_MFS_SFTP}" == "xyes" ]; then
 	${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/bin/sftp ${X_STAGING_FSROOT}/usr/bin/
-	${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/libprivatessh.so.5 ${X_STAGING_FSROOT}/usr/bin/
-	${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/libprivateldns.so.5 ${X_STAGING_FSROOT}/usr/bin/
+	${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/libprivatessh.so.5 ${X_STAGING_FSROOT}/usr/lib/
+	${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/libprivateldns.so.5 ${X_STAGING_FSROOT}/usr/lib/
 fi
 
 # kerberos libraries needed for telnet/telnetd
@@ -326,8 +334,7 @@ ${INSTALL_DEF_BIN} ${X_DESTDIR}/sbin/route ${X_STAGING_FSROOT}/sbin/
 ${INSTALL_DEF_BIN} ${X_DESTDIR}/sbin/ping ${X_STAGING_FSROOT}/sbin/
 ${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/bin/netstat ${X_STAGING_FSROOT}/usr/bin/
 ${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/sbin/arp ${X_STAGING_FSROOT}/usr/sbin/
-#${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/sbin/tcpdump ${X_STAGING_FSROOT}/usr/sbin/
-
+${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/sbin/tcpdump ${X_STAGING_FSROOT}/usr/sbin/
 
 ${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/sbin/hostapd ${X_STAGING_FSROOT}/usr/sbin/
 ${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/sbin/hostapd_cli ${X_STAGING_FSROOT}/usr/sbin/
@@ -356,8 +363,8 @@ ${INSTALL_DEF_LIB} ${X_DESTDIR}/lib/libipsec.so.4 ${X_STAGING_FSROOT}/lib/
 ${INSTALL_DEF_LIB} ${X_DESTDIR}/lib/libthr.so.3 ${X_STAGING_FSROOT}/lib/
 ${INSTALL_DEF_LIB} ${X_DESTDIR}/lib/libjail.so.1 ${X_STAGING_FSROOT}/lib/
 ${INSTALL_DEF_LIB} ${X_DESTDIR}/lib/lib80211.so.1 ${X_STAGING_FSROOT}/lib/
-${INSTALL_DEF_LIB} ${X_DESTDIR}/lib/libcasper.so.0 ${X_STAGING_FSROOT}/lib/
-${INSTALL_DEF_LIB} ${X_DESTDIR}/lib/casper/libcap_dns.so.0 ${X_STAGING_FSROOT}/lib/casper
+${INSTALL_DEF_LIB} ${X_DESTDIR}/lib/libcasper.so.1 ${X_STAGING_FSROOT}/lib/
+${INSTALL_DEF_LIB} ${X_DESTDIR}/lib/casper/libcap_dns.so.1 ${X_STAGING_FSROOT}/lib/casper
 
 ${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/libmemstat.so.3 ${X_STAGING_FSROOT}/usr/lib/
 ${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/libnetgraph.so.4 ${X_STAGING_FSROOT}/usr/lib/
@@ -423,10 +430,19 @@ ${INSTALL_DEF_FILE} ${X_DESTDIR}/etc/protocols ${X_STAGING_FSROOT}/c/etc/
 ${INSTALL_DEF_FILE} ${X_DESTDIR}/etc/netconfig ${X_STAGING_FSROOT}/c/etc/
 
 # monitoring
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/sbin/prometheus_sysctl_exporter ${X_STAGING_FSROOT}/usr/sbin/
+${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/sbin/prometheus_sysctl_exporter	${X_STAGING_FSROOT}/usr/sbin/
+${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/bin/procstat			${X_STAGING_FSROOT}/usr/bin/
+${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/libprocstat.so.1		${X_STAGING_FSROOT}/usr/lib/
 
 # checksum
 ${INSTALL_DEF_BIN} ${X_DESTDIR}/sbin/sha1 ${X_STAGING_FSROOT}/sbin/
+
+# ktr
+${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/bin/ktrdump ${X_STAGING_FSROOT}/usr/bin/
+
+# devctl
+${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/sbin/devctl ${X_STAGING_FSROOT}/usr/sbin/
+${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/libdevctl.so.5 ${X_STAGING_FSROOT}/usr/lib/
 
 echo "*** Validate dependencies..."
 # find all file with executable bit and binary charset
