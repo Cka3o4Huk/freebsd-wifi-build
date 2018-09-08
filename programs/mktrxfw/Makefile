@@ -36,7 +36,7 @@ loader: loader.elf
 	$(OBJCOPY) -S -O binary loader.elf loader
 	$(OBJCOPY) -S -O binary loader.elf.clang loader.clang	
 
-$(MIPSOBJECTS): $(.PREFIX).c
+$(MIPSOBJ_CLANG): $(.PREFIX).c
 	$(MIPSCC) $(MIPSCFLAGS) -c $(.PREFIX).c -o $(.PREFIX).o
 	mkdir -p objjj
 	$(MIPSCC_CLANG) $(MIPSCFLAGS) -c $(.PREFIX).c -o objjj/$(.PREFIX).o
