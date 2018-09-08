@@ -70,6 +70,7 @@ ${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/data/2
 ${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/data/3
 ${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/data/4
 ${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/boot
+${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/boot/dtb
 ${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/boot/kernel
 ${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/dev
 ${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/tmp
@@ -96,7 +97,9 @@ ${INSTALL_DEF_BIN} ${X_DESTDIR}/sbin/mount ${X_STAGING_FSROOT}/sbin/
 ${INSTALL_DEF_BIN} ${X_DESTDIR}/sbin/mount_mfs ${X_STAGING_FSROOT}/sbin/
 ${INSTALL_DEF_BIN} ${X_DESTDIR}/sbin/umount ${X_STAGING_FSROOT}/sbin/
 ${INSTALL_DEF_BIN} ${X_DESTDIR}/sbin/mdconfig ${X_STAGING_FSROOT}/sbin/
+${INSTALL_DEF_BIN} ${X_DESTDIR}/sbin/fsck ${X_STAGING_FSROOT}/sbin/
 ${INSTALL_DEF_BIN} ${X_DESTDIR}/sbin/fsck_ffs ${X_STAGING_FSROOT}/sbin/
+${INSTALL_DEF_BIN} ${X_DESTDIR}/sbin/fsck_ufs ${X_STAGING_FSROOT}/sbin/
 ${INSTALL_DEF_BIN} ${X_DESTDIR}/sbin/newfs ${X_STAGING_FSROOT}/sbin/
 ${INSTALL_DEF_LIB} ${X_DESTDIR}/lib/libgeom.so.5 ${X_STAGING_FSROOT}/lib/
 ${INSTALL_DEF_LIB} ${X_DESTDIR}/lib/libufs.so.6 ${X_STAGING_FSROOT}/lib/
@@ -104,6 +107,7 @@ ${INSTALL_DEF_LIB} ${X_DESTDIR}/lib/libufs.so.6 ${X_STAGING_FSROOT}/lib/
 # base
 ${INSTALL_DEF_BIN} ${X_DESTDIR}/sbin/init ${X_STAGING_FSROOT}/sbin/
 ${INSTALL_DEF_BIN} ${X_DESTDIR}/sbin/reboot ${X_STAGING_FSROOT}/sbin/
+${INSTALL_DEF_BIN} ${X_DESTDIR}/sbin/shutdown ${X_STAGING_FSROOT}/sbin/
 ${INSTALL_DEF_BIN} ${X_DESTDIR}/sbin/sysctl ${X_STAGING_FSROOT}/sbin/
 ${INSTALL_DEF_BIN} ${X_DESTDIR}/sbin/dmesg ${X_STAGING_FSROOT}/sbin/
 ${INSTALL_DEF_BIN} ${X_DESTDIR}/sbin/kldload ${X_STAGING_FSROOT}/sbin/
@@ -151,6 +155,7 @@ ${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/bin/reset ${X_STAGING_FSROOT}/usr/bin/
 ${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/bin/tput ${X_STAGING_FSROOT}/usr/bin/
 ${INSTALL_SUID_BIN} ${X_DESTDIR}/usr/bin/passwd ${X_STAGING_FSROOT}/usr/bin/
 ${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/sbin/chown ${X_STAGING_FSROOT}/usr/sbin/
+${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/bin/wall ${X_STAGING_FSROOT}/usr/bin/
 
 # cron
 ${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/sbin/cron ${X_STAGING_FSROOT}/usr/sbin/
@@ -395,6 +400,9 @@ ${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/sbin/pmcstat ${X_STAGING_FSROOT}/usr/sbin/
 ${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/sbin/pmccontrol ${X_STAGING_FSROOT}/usr/sbin/
 ${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/libpmc.so.5 ${X_STAGING_FSROOT}/usr/lib/
 ${INSTALL_DEF_LIB} ${X_DESTDIR}/lib/libelf.so.2 ${X_STAGING_FSROOT}/usr/lib/
+#pmc* requires c++ libs... madness.
+${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/libc++.so.1 ${X_STAGING_FSROOT}/usr/lib/
+${INSTALL_DEF_LIB} ${X_DESTDIR}/lib/libcxxrt.so.1 ${X_STAGING_FSROOT}/lib/
 
 # rc stuff
 ${INSTALL_DEF_BIN} ${X_BASEDIR}/files/rc.subr ${X_STAGING_FSROOT}/c/etc/
@@ -491,4 +499,19 @@ if [ "${MFSROOT_INC_MODULES}" = "YES" ]; then
 	for i in ${MFSROOT_INC_MODULE_LIST}; do
 		${INSTALL_DEF_KLD} ${X_DESTDIR}/boot/kernel.${KERNCONF}/${i}.ko ${X_STAGING_FSROOT}/boot/kernel/ || exit 1
 	done
+fi
+
+#dtb - if required
+if [ "${MFSROOT_INC_DTB}" = "YES" ]; then
+	echo "*** Including DTB.."
+
+	for i in ${MFSROOT_INC_DTB_LIST}; do
+		${INSTALL_DEF_FILE} ${X_DESTDIR}/boot/dtb/${i}.dtb ${X_STAGING_FSROOT}/boot/dtb/ || exit 1
+	done
+fi
+
+# kernel - if required
+if [ "${MFSROOT_INC_KERNEL}" = "YES" ]; then
+	echo "*** Including kernel.."
+	${INSTALL_DEF_KLD} ${X_DESTDIR}/boot/kernel.${KERNCONF}/kernel ${X_STAGING_FSROOT}/boot/kernel/ || exit 1
 fi
