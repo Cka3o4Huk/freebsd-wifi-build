@@ -35,11 +35,13 @@ if [ "x${DOEXIT}" = "xYES" ]; then
 	exit 127
 fi
 
-NCPU=$(sysctl hw.ncpu | awk '{print $2}')
+NCPU=$(sysctl -n hw.ncpu)
 
-# BUILD_FLAGS is set by the environment
+# BUILD_FLAGS & PARALLEL_FLAGS are set by the environment
+# by default build consumes all CPU threads, silent and provide detailed
+# report about build errors
 PARALLEL_FLAGS=${PARALLEL_FLAGS:="-j${NCPU}"}
-BUILD_FLAGS=${BUILD_FLAGS:="NO_CLEAN=1 ${PARALLEL_FLAGS}"}
+BUILD_FLAGS=${BUILD_FLAGS:="-d e -s NO_CLEAN=1 ${PARALLEL_FLAGS}"}
 
 # CFGNAME
 # BUILDNAME
