@@ -159,7 +159,7 @@ while [ -n "$1" ]; do
 	fi
 	
 	echo env MAKEOBJDIRPREFIX=${X_MAKEOBJDIRPREFIX}		\
-	    make -d e -s ${BUILD_FLAGS} DB_FROM_SRC=1		\
+	    make ${BUILD_FLAGS} DB_FROM_SRC=1		\
 	    ${X_CROSS_TOOLCHAIN}				\
 	    TARGET=${TARGET}					\
 	    TARGET_ARCH=${TARGET_ARCH}				\
@@ -176,7 +176,7 @@ while [ -n "$1" ]; do
 	    $1
 
 	env MAKEOBJDIRPREFIX=${X_MAKEOBJDIRPREFIX}		\
-	    make -d e -s ${BUILD_FLAGS} DB_FROM_SRC=1		\
+	    make ${BUILD_FLAGS} DB_FROM_SRC=1		\
 	    ${X_CROSS_TOOLCHAIN}				\
 	    TARGET=${TARGET}					\
 	    TARGET_ARCH=${TARGET_ARCH}				\
