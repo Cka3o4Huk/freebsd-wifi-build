@@ -1,0 +1,44 @@
+#!/bin/sh
+
+SCRIPT_NAME="`basename $0`"
+SCRIPT_DIR="$(dirname `realpath $0`)"
+CUR_DIR="`pwd`"
+
+X_SRCDIR=${CUR_DIR}
+
+# suck in the per-device options
+CFGNAME=$1
+shift
+. ${SCRIPT_DIR}/../cfg/${CFGNAME} || exit 1
+# If X_BUILD_BASE_CFG is set, also load that in.
+if [ -n "${X_BUILD_BASE_CFG}" ]; then
+	. ${SCRIPT_DIR}/../cfg/base/${X_BUILD_BASE_CFG} || exit 1
+fi
+
+# include the config variable generation code
+. ${SCRIPT_DIR}/../lib/cfg.sh || exit 1
+
+# calculate basedir
+# XXX this should be generated in cfg.pm!
+X_BASEDIR=${SCRIPT_DIR}/../
+
+echo "*** Validate dependencies..."
+# find all file with executable bit and binary charset
+# and fetch all needed libraries for them
+for lib in $(find ${X_STAGING_FSROOT} -type f -perm +111 -exec file -i '{}' \; | \
+	grep 'x-\(executable\|sharedlib\); charset=binary' | \
+	cut -f1 -d: | xargs -I $ bash -c "readelf -d $" | \
+	grep NEEDED | cut -f2 -d':' | tr -d ' []' | sort | uniq )
+do
+	#echo ">>> " $lib
+	if [ -z $(find ${X_STAGING_FSROOT} -name $lib) ]
+	then
+		echo "WARNING! MISSING LIBRARY:" $(cd ${X_DESTDIR} && find . -name $lib)
+		# required by
+		find ${X_STAGING_FSROOT} -type f -perm +111 -exec file -i '{}' \; | \
+		grep 'x-\(executable\|sharedlib\); charset=binary' | \
+		cut -f1 -d: | xargs -I $ bash -c "echo MAGIC $; readelf -d $" | \
+		grep -B 10 $lib | grep MAGIC | sed -e 's/MAGIC/ required by/g'
+	fi
+done
+
