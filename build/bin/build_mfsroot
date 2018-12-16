@@ -453,26 +453,6 @@ ${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/bin/ktrdump ${X_STAGING_FSROOT}/usr/bin/
 ${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/sbin/devctl ${X_STAGING_FSROOT}/usr/sbin/
 ${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/libdevctl.so.5 ${X_STAGING_FSROOT}/usr/lib/
 
-echo "*** Validate dependencies..."
-# find all file with executable bit and binary charset
-# and fetch all needed libraries for them
-for lib in $(find ${X_STAGING_FSROOT} -type f -perm +111 -exec file -i '{}' \; | \
-	grep 'x-\(executable\|sharedlib\); charset=binary' | \
-	cut -f1 -d: | xargs -I $ bash -c "readelf -d $" | \
-	grep NEEDED | cut -f2 -d':' | tr -d ' []' | sort | uniq )
-do
-	#echo ">>> " $lib
-	if [ -z $(find ${X_STAGING_FSROOT} -name $lib) ]
-	then
-		echo "WARNING! MISSING LIBRARY:" $(cd ${X_DESTDIR} && find . -name $lib)
-		# required by
-		find ${X_STAGING_FSROOT} -type f -perm +111 -exec file -i '{}' \; | \
-		grep 'x-\(executable\|sharedlib\); charset=binary' | \
-		cut -f1 -d: | xargs -I $ bash -c "echo MAGIC $; readelf -d $" | \
-		grep -B 10 $lib | grep MAGIC | sed -e 's/MAGIC/ required by/g'
-	fi
-done
-
 # Local board setup
 echo "# Configuration for: ${KERNCONF}" > ${X_STAGING_TMPDIR}/board.cfg
 echo "CFG_PATH=\"${BIN_CFG_PARTITION}\"" >> ${X_STAGING_TMPDIR}/board.cfg
