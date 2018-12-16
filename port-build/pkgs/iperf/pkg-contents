@@ -1,0 +1,5 @@
+# mtree
+./usr type=dir uid=0 gid=0 mode=0755 
+./usr/local type=dir uid=0 gid=0 mode=0755
+./usr/local/bin type=dir uid=0 gid=0 mode=0755 
+./usr/local/bin/iperf type=file uid=0 gid=0 mode=0755 size=182901 content=usr/local/bin/iperf
