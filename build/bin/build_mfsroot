@@ -424,6 +424,7 @@ ${INSTALL_DEF_BIN} ${X_BASEDIR}/files/rc.d/net/etherswitch ${X_STAGING_FSROOT}/c
 ${INSTALL_DEF_BIN} ${X_BASEDIR}/files/rc.d/srv/inetd ${X_STAGING_FSROOT}/c/etc/rc.d/srv/
 ${INSTALL_DEF_BIN} ${X_BASEDIR}/files/rc.d/srv/cron ${X_STAGING_FSROOT}/c/etc/rc.d/srv/
 ${INSTALL_DEF_BIN} ${X_BASEDIR}/files/rc.d/srv/ntpdate ${X_STAGING_FSROOT}/c/etc/rc.d/srv/
+${INSTALL_DEF_BIN} ${X_BASEDIR}/files/rc.d/srv/syslogd ${X_STAGING_FSROOT}/c/etc/rc.d/srv/
 
 # config save/load scripts
 ${INSTALL_DEF_BIN} ${X_BASEDIR}/files/cfg_save ${X_STAGING_FSROOT}/bin
