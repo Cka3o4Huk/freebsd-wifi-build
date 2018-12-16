@@ -1,0 +1,32 @@
+#!/bin/sh
+
+# XXX ideally these will be installed as part of the package;
+# I'll do that later.
+
+. /etc/rc.subr
+. /etc/rc.conf.default
+. /etc/cfg/rc.conf
+
+# dhcpd_listen_interface="if0"
+
+case $1 in
+	'start')
+		# For now, just support one listen address; should
+		# support multiple entries later.
+		if [ "${dhcpd_listen_interface}" != "" ]; then
+			dhcpd_listen_interface="-u${dhcpd_listen_interface}"
+		fi
+		/usr/local/sbin/dhcpd ${dhcpd_listen_interface} || exit 127
+		exit 0
+		;;
+	'stop')
+		kill `pgrep dhcpd` || exit 127
+		exit 0
+		;;
+	*)
+		echo "$0: start|stop"
+		exit 127
+		;;
+esac
+
+exit 0

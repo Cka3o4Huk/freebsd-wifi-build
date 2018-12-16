@@ -1,0 +1,10 @@
+# mtree
+./usr type=dir uid=0 gid=0 mode=0755 
+./usr/local type=dir uid=0 gid=0 mode=0755
+./usr/local/sbin type=dir uid=0 gid=0 mode=0755 
+./usr/local/sbin/dhcpd type=file uid=0 gid=0 mode=0755 size=151588 content=dhcpd
+c uid=0 gid=0 mode=755 type=dir
+c/etc uid=0 gid=0 mode=755 type=dir
+c/etc/rc.d uid=0 gid=0 mode=755 type=dir
+c/etc/rc.d/srv uid=0 gid=0 mode=755 type=dir
+c/etc/rc.d/srv/dhcpd uid=0 gid=0 mode=0755 type=file content=c/etc/rc.d/srv/dhcpd
