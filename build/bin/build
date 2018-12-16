@@ -111,6 +111,9 @@ for BUILD_TARGET in ${X_BUILD_LIST}; do
 		'mfsroot')
 			${SCRIPT_DIR}/build_mfsroot ${CFGNAME} || exit 1
 		;;
+		'checkmfs')
+			${SCRIPT_DIR}/build_checkmfs ${CFGNAME} || exit 1
+		;;
 		'fullroot')
 			${SCRIPT_DIR}/build_fullroot ${CFGNAME} || exit 1
 		;;
