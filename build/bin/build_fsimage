@@ -18,6 +18,10 @@ fi
 # include the config variable generation code
 . ${SCRIPT_DIR}/../lib/cfg.sh || exit 1
 
+if [ "${X_SETX_DEBUG}" = "YES" ]; then
+  set -x
+fi
+
 echo "*** Running makefs to build compressed image .. "
 echo "*** from ${X_STAGING_FSROOT} .."
 mkdir -p ${X_IMGBASE} || exit 1
