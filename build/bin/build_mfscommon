@@ -1,0 +1,200 @@
+#!/bin/sh
+
+SCRIPT_NAME="`basename $0`"
+SCRIPT_DIR="$(dirname `realpath $0`)"
+CUR_DIR="`pwd`"
+
+# suck in the per-device options
+CFGNAME=$1
+shift
+. ${SCRIPT_DIR}/../cfg/${CFGNAME} || exit 1
+
+# If X_BUILD_BASE_CFG is set, also load that in.
+if [ -n "${X_BUILD_BASE_CFG}" ]; then
+	. ${SCRIPT_DIR}/../cfg/base/${X_BUILD_BASE_CFG} || exit 1
+fi
+
+# include the config variable generation code
+. ${SCRIPT_DIR}/../lib/cfg.sh || exit 1
+
+# calculate basedir
+# XXX this should be generated in cfg.pm!
+X_BASEDIR=${SCRIPT_DIR}/../
+
+# Install targets, using the metalog as appropriate
+INSTALL_PROG="install -U -M ${X_STAGING_METALOG_MFSROOT} -D ${X_STAGING_FSROOT}"
+
+INSTALL_DEF_BIN="${INSTALL_PROG} -o root -g wheel -m 0755"
+INSTALL_SUID_BIN="${INSTALL_PROG} -o root -g wheel -m 4711"
+INSTALL_DEF_DIR="${INSTALL_PROG} -o root -g wheel -m 0755 -d"
+INSTALL_DEF_FILE="${INSTALL_PROG} -o root -g wheel -m 0644"
+INSTALL_DEF_KLD="${INSTALL_PROG} -o root -g wheel -m 0555"
+INSTALL_DEF_LIB="${INSTALL_PROG} -o root -g wheel -m 0755"
+INSTALL_DEF_LINK="${INSTALL_PROG} -o root -g wheel -m 0755 -l s"
+
+echo "*** Deleting old file system.."
+mkdir -p ${X_STAGING_FSROOT}
+chflags -R noschg ${X_STAGING_FSROOT}
+rm -rf ${X_STAGING_FSROOT}
+rm -rf ${X_STAGING_TMPDIR}
+rm  -f ${X_STAGING_METALOG}
+rm  -f ${X_STAGING_METALOG_MFSROOT}
+rm  -f ${X_STAGING_METALOG_TMP}
+
+echo "*** Creating new filesystem..."
+mkdir -p ${X_STAGING_FSROOT}
+mkdir -p ${X_STAGING_TMPDIR}
+
+# Create needed directories
+${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/
+${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/c
+${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/c/etc
+${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/c/etc/dropbear
+${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/c/etc/cfg
+${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/c/etc/cron.d
+${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/c/etc/rc.d
+${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/c/etc/rc.d/base
+${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/c/etc/rc.d/net
+${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/c/etc/rc.d/srv
+${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/c/etc/pam.d
+${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/c/etc/state
+${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/etc
+${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/lib
+${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/lib/casper
+${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/bin
+${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/data
+${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/data/1
+${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/data/2
+${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/data/3
+${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/data/4
+${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/boot
+${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/boot/dtb
+${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/boot/kernel
+${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/dev
+${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/tmp
+${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/mnt
+${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/proc
+${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/root
+${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/var
+${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/sbin
+${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/libexec
+${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/libexec/resolvconf
+${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/usr
+${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/usr/local
+${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/usr/libexec
+${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/usr/lib
+${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/usr/bin
+${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/usr/sbin
+${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/usr/share
+${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/usr/share/misc
+${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/usr/share/tabset
+
+echo "*** Populating filesystem..."
+
+for i in ${MFSROOT_BIN_ROOT}; do
+	j=$(dirname ${i})
+	${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/${j}
+	${INSTALL_DEF_BIN} ${X_DESTDIR}/${i} ${X_STAGING_FSROOT}/${j}/ || exit 1
+done
+
+for i in ${MFSROOT_LIB_ROOT}; do
+	j=$(dirname ${i})
+	${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/${j}
+	${INSTALL_DEF_LIB} ${X_DESTDIR}/${i} ${X_STAGING_FSROOT}/${j}/ || exit 1
+done
+
+for i in ${MFSROOT_SUID_ROOT}; do
+	j=$(dirname ${i})
+	${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/${j}
+	${INSTALL_SUID_BIN} ${X_DESTDIR}/${i} ${X_STAGING_FSROOT}/${j}/ || exit 1
+done
+
+for i in ${MFSROOT_BIN_FILES}; do
+	j=$(dirname ${i})
+	${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/${j}
+	${INSTALL_DEF_BIN} ${X_BASEDIR}/files/${i} ${X_STAGING_FSROOT}/${j}/ || exit 1
+done
+
+for i in ${MFSROOT_FILE_FILES}; do
+	j=$(dirname ${i})
+	${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/${j}
+	${INSTALL_DEF_FILE} ${X_BASEDIR}/files/${i} ${X_STAGING_FSROOT}/${j}/ || exit 1
+done
+
+echo "*** Resolving dependencies..."
+
+T_DEPEND_LOOP="YES"
+while [ "$T_DEPEND_LOOP" = "YES" ]
+do
+	T_DEPEND_LOOP="NO"
+	T_DEPEND_LIBS=$(find ${X_STAGING_FSROOT} -type f -perm +111 -exec file -i '{}' \; | \
+	grep 'x-\(executable\|sharedlib\); charset=binary' | \
+	cut -f1 -d: | xargs -I $ bash -c "readelf -d $" | \
+	grep NEEDED | cut -f2 -d':' | tr -d ' []' | sort | uniq )
+	
+	for lib in $T_DEPEND_LIBS
+	do
+		#echo ">>> " $lib
+		if [ -z $(find ${X_STAGING_FSROOT} -name $lib) ]
+		then
+			LIB_PATH=$(cd ${X_DESTDIR} && find . -name $lib | sed 's|^./||')
+			LIB_DIR=$(dirname $LIB_PATH)
+			echo "Installing ${LIB_PATH}"
+			# required by
+			if [ "${X_MFS_VERBOSE}" = "yes" ]
+			then
+				find ${X_STAGING_FSROOT} -type f -perm +111 -exec file -i '{}' \; | \
+				grep 'x-\(executable\|sharedlib\); charset=binary' | \
+				cut -f1 -d: | xargs -I $ bash -c "echo MAGIC $; readelf -d $" | \
+				grep -B 10 $lib | grep MAGIC | sed -e 's/MAGIC/ required by/g'
+			fi
+			# installing
+			${INSTALL_DEF_LIB} ${X_DESTDIR}/${LIB_PATH} ${X_STAGING_FSROOT}/${LIB_DIR}/ || exit 1
+			T_DEPEND_LOOP="YES"
+		fi
+	done
+done
+
+# Local board setup
+echo "# Configuration for: ${KERNCONF}" > ${X_STAGING_TMPDIR}/board.cfg
+echo "CFG_PATH=\"${BIN_CFG_PARTITION}\"" >> ${X_STAGING_TMPDIR}/board.cfg
+echo "CFG_SIZE=\"${BIN_CFG_SIZE}\"" >> ${X_STAGING_TMPDIR}/board.cfg
+echo "RECOVERY_PIN=\"${RECOVERY_PIN}\"" >> ${X_STAGING_TMPDIR}/board.cfg
+echo "RECOVERY_PIN_ACTIVE=\"${RECOVERY_PIN_ACTIVE}\"" >> ${X_STAGING_TMPDIR}/board.cfg
+
+${INSTALL_DEF_FILE} ${X_STAGING_TMPDIR}/board.cfg ${X_STAGING_FSROOT}/c/etc/
+
+# Local board rc.conf file - with system defaults
+cat ${X_BASEDIR}/files/rc.conf | sed "s|@DEF_ETH@|${X_CFG_DEFAULT_ETHER}|g" \
+    | sed "s|@DEF_HOSTNAME@|${X_CFG_DEFAULT_HOSTNAME}|" \
+    > ${X_STAGING_TMPDIR}/rc.conf
+${INSTALL_DEF_FILE} ${X_STAGING_TMPDIR}/rc.conf ${X_STAGING_FSROOT}/c/etc/cfg/
+
+# Set the console tty
+cat ${X_BASEDIR}/files/ttys | sed "s|@DEF_TTY@|${X_CFG_DEFAULT_TTY}|" \
+    > ${X_STAGING_TMPDIR}/ttys
+${INSTALL_DEF_FILE} ${X_STAGING_TMPDIR}/ttys ${X_STAGING_FSROOT}/c/etc/
+
+# kernel modules - if required
+if [ "${MFSROOT_INC_MODULES}" = "YES" ]; then
+	echo "*** Including modules.."
+
+	for i in ${MFSROOT_INC_MODULE_LIST}; do
+		${INSTALL_DEF_KLD} ${X_DESTDIR}/boot/kernel.${KERNCONF}/${i}.ko ${X_STAGING_FSROOT}/boot/kernel/ || exit 1
+	done
+fi
+
+#dtb - if required
+if [ "${MFSROOT_INC_DTB}" = "YES" ]; then
+	echo "*** Including DTB.."
+
+	for i in ${MFSROOT_INC_DTB_LIST}; do
+		${INSTALL_DEF_FILE} ${X_DESTDIR}/boot/dtb/${i}.dtb ${X_STAGING_FSROOT}/boot/dtb/ || exit 1
+	done
+fi
+
+# kernel - if required
+if [ "${MFSROOT_INC_KERNEL}" = "YES" ]; then
+	echo "*** Including kernel.."
+	${INSTALL_DEF_KLD} ${X_DESTDIR}/boot/kernel.${KERNCONF}/kernel ${X_STAGING_FSROOT}/boot/kernel/ || exit 1
+fi

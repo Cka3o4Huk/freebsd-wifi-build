@@ -1,498 +1,401 @@
 #!/bin/sh
 
-SCRIPT_NAME="`basename $0`"
 SCRIPT_DIR="$(dirname `realpath $0`)"
-CUR_DIR="`pwd`"
-
-X_SRCDIR=${CUR_DIR}
 
 # suck in the per-device options
 CFGNAME=$1
-shift
 . ${SCRIPT_DIR}/../cfg/${CFGNAME} || exit 1
-# If X_BUILD_BASE_CFG is set, also load that in.
-if [ -n "${X_BUILD_BASE_CFG}" ]; then
-	. ${SCRIPT_DIR}/../cfg/base/${X_BUILD_BASE_CFG} || exit 1
-fi
 
-# include the config variable generation code
-. ${SCRIPT_DIR}/../lib/cfg.sh || exit 1
+MFSROOT_SUID_ROOT=""
 
-# calculate basedir
-# XXX this should be generated in cfg.pm!
-X_BASEDIR=${SCRIPT_DIR}/../
+MFSROOT_LIB_ROOT=""
 
-# Configure INSTALL; to use the FreeBSD install program from -10
-# and -head that knows about mtree updates and non-root installs.
+MFSROOT_BIN_FILES="
+		bin/cfg_load
+		bin/cfg_save
+		etc/rc
+		c/etc/rc.d/base/srv
+		c/etc/rc.d/base/sysctl
+		c/etc/rc.d/srv/inetd
+		c/etc/rc.subr
+		c/etc/rc2
+		c/etc/state/openvpn-down
+		c/etc/state/openvpn-up"
 
-INSTALL_PROG="install -U -M ${X_STAGING_METALOG_MFSROOT} -D ${X_STAGING_FSROOT}"
+MFSROOT_FILE_FILES="
+		c/etc/inetd.conf
+		c/etc/gettytab
+		c/etc/passwd
+		c/etc/master.passwd
+		c/etc/group
+		c/etc/cfg/manifest
+		c/etc/rc.conf.default
+		boot/loader.conf
+		"
 
-INSTALL_DEF_BIN="${INSTALL_PROG} -o root -g wheel -m 0755"
-INSTALL_SUID_BIN="${INSTALL_PROG} -o root -g wheel -m 4711"
-INSTALL_DEF_DIR="${INSTALL_PROG} -o root -g wheel -m 0755 -d"
-INSTALL_DEF_FILE="${INSTALL_PROG} -o root -g wheel -m 0644"
-INSTALL_DEF_KLD="${INSTALL_PROG} -o root -g wheel -m 0555"
-INSTALL_DEF_LIB="${INSTALL_PROG} -o root -g wheel -m 0755"
-INSTALL_DEF_LINK="${INSTALL_PROG} -o root -g wheel -m 0755 -l s"
+MFSROOT_BIN_ROOT="bin/cat
+		bin/chmod
+		bin/cp
+		bin/csh
+		bin/date
+		bin/dd
+		bin/df
+		bin/expr
+		bin/hostname
+		bin/kenv
+		bin/ln
+		bin/ls
+		bin/mkdir
+		bin/mv
+		bin/pgrep
+		bin/rm
+		bin/sh
+		bin/sleep
 
-echo "*** Deleting old file system.."
-chflags -R noschg ${X_STAGING_FSROOT}
-rm -rf ${X_STAGING_FSROOT}
-rm -rf ${X_STAGING_TMPDIR}
-rm  -f ${X_STAGING_METALOG}
-rm  -f ${X_STAGING_METALOG_MFSROOT}
-rm  -f ${X_STAGING_METALOG_TMP}
+		libexec/resolvconf/libc
 
-echo "*** Creating new filesystem..."
-mkdir -p ${X_STAGING_FSROOT}
-mkdir -p ${X_STAGING_TMPDIR}
+		sbin/dmesg
+		sbin/init
+		sbin/reboot
+		
+		sbin/sha1
+		sbin/shutdown
+		sbin/sysctl
+		
+		
+		usr/bin/cap_mkdb
+		usr/bin/clear
+		usr/bin/cmp
+		usr/bin/ee
+		usr/bin/false
+		usr/bin/find
+		usr/bin/grep
+		usr/bin/head
+		usr/bin/hexdump
+		usr/bin/logger
+		usr/bin/more
+		usr/bin/reset
+		usr/bin/tail
 
-# Create needed directories
-${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/
-${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/c
-${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/c/etc
-${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/c/etc/dropbear
-${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/c/etc/cfg
-${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/c/etc/cron.d
-${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/c/etc/rc.d
-${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/c/etc/rc.d/base
-${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/c/etc/rc.d/net
-${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/c/etc/rc.d/srv
-${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/c/etc/pam.d
-${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/c/etc/state
-${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/etc
-${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/lib
-${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/lib/casper
-${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/bin
-${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/data
-${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/data/1
-${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/data/2
-${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/data/3
-${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/data/4
-${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/boot
-${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/boot/dtb
-${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/boot/kernel
-${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/dev
-${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/tmp
-${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/mnt
-${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/proc
-${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/root
-${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/var
-${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/sbin
-${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/libexec
-${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/libexec/resolvconf
-${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/usr
-${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/usr/libexec
-${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/usr/lib
-${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/usr/bin
-${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/usr/sbin
-${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/usr/share
-${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/usr/share/misc
-${INSTALL_DEF_DIR} ${X_STAGING_FSROOT}/usr/share/tabset
+		usr/bin/tftp
+		usr/bin/touch
+		usr/bin/tput
+		usr/bin/true
+		usr/bin/uname
+		usr/bin/uptime
 
-echo "*** Populating filesystem..."
+		usr/bin/wall
 
-# MFS tools
-${INSTALL_DEF_BIN} ${X_DESTDIR}/sbin/mount ${X_STAGING_FSROOT}/sbin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/sbin/mount_mfs ${X_STAGING_FSROOT}/sbin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/sbin/umount ${X_STAGING_FSROOT}/sbin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/sbin/mdconfig ${X_STAGING_FSROOT}/sbin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/sbin/fsck ${X_STAGING_FSROOT}/sbin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/sbin/fsck_ffs ${X_STAGING_FSROOT}/sbin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/sbin/fsck_ufs ${X_STAGING_FSROOT}/sbin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/sbin/newfs ${X_STAGING_FSROOT}/sbin/
-${INSTALL_DEF_LIB} ${X_DESTDIR}/lib/libgeom.so.5 ${X_STAGING_FSROOT}/lib/
-${INSTALL_DEF_LIB} ${X_DESTDIR}/lib/libufs.so.6 ${X_STAGING_FSROOT}/lib/
+		usr/libexec/getty
 
-# base
-${INSTALL_DEF_BIN} ${X_DESTDIR}/sbin/init ${X_STAGING_FSROOT}/sbin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/sbin/reboot ${X_STAGING_FSROOT}/sbin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/sbin/shutdown ${X_STAGING_FSROOT}/sbin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/sbin/sysctl ${X_STAGING_FSROOT}/sbin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/sbin/dmesg ${X_STAGING_FSROOT}/sbin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/sbin/kldload ${X_STAGING_FSROOT}/sbin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/sbin/kldunload ${X_STAGING_FSROOT}/sbin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/sbin/kldstat ${X_STAGING_FSROOT}/sbin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/sbin/ipfw ${X_STAGING_FSROOT}/sbin/
+		usr/sbin/chown
+		usr/sbin/inetd
+		usr/sbin/pwd_mkdb
+"
 
-# ethernet switch
-${INSTALL_DEF_BIN} ${X_DESTDIR}/sbin/etherswitchcfg ${X_STAGING_FSROOT}/sbin/
+### Options sorted in alpha order
+#X_MFS_ARCHIVE="no"
+#X_MFS_ATHEROS="no"
+#X_MFS_AUTH="yes"
+#X_MFS_CRON="no"
+#X_MFS_DEV="no"
+#X_MFS_FS="no"
+#X_MFS_DIAG="no"
+#X_MFS_DIAG_NET="no"
+#X_MFS_ETH="no"
+#X_MFS_FAT="no"
+#X_MFS_FW="no"
+#X_MFS_GPIO="no"
+#X_MFS_KLD="no"
+#X_MFS_LOG="no"
+#X_MFS_NET="no"
+#X_MFS_NTP="no"
+#X_MFS_PCI="no"
+#X_MFS_SFTP="no"
+#X_MFS_STAT="no"
+#X_MFS_TELNET="no"
+#X_MFS_USB="no"
+#X_MFS_WLAN="no"
 
-# MSDOS filesystems!
-${INSTALL_DEF_BIN} ${X_DESTDIR}/sbin/mount_msdosfs ${X_STAGING_FSROOT}/sbin/
-${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/libkiconv.so ${X_STAGING_FSROOT}/usr/lib/
-
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/bin/true ${X_STAGING_FSROOT}/bin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/bin/false ${X_STAGING_FSROOT}/bin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/bin/sh ${X_STAGING_FSROOT}/bin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/bin/rm ${X_STAGING_FSROOT}/bin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/bin/ls ${X_STAGING_FSROOT}/bin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/bin/ln ${X_STAGING_FSROOT}/bin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/bin/cp ${X_STAGING_FSROOT}/bin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/bin/mv ${X_STAGING_FSROOT}/bin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/bin/df ${X_STAGING_FSROOT}/bin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/bin/cp ${X_STAGING_FSROOT}/bin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/bin/cat ${X_STAGING_FSROOT}/bin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/bin/kenv ${X_STAGING_FSROOT}/bin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/bin/dd ${X_STAGING_FSROOT}/bin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/bin/ps ${X_STAGING_FSROOT}/bin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/bin/expr ${X_STAGING_FSROOT}/bin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/bin/sleep ${X_STAGING_FSROOT}/bin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/bin/hostname ${X_STAGING_FSROOT}/bin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/bin/mkdir ${X_STAGING_FSROOT}/bin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/bin/chmod ${X_STAGING_FSROOT}/bin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/bin/hexdump ${X_STAGING_FSROOT}/usr/bin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/bin/touch ${X_STAGING_FSROOT}/usr/bin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/bin/more ${X_STAGING_FSROOT}/usr/bin/
-${INSTALL_DEF_LINK} /usr/bin/more ${X_STAGING_FSROOT}/usr/bin/less
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/bin/nc ${X_STAGING_FSROOT}/usr/bin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/bin/uptime ${X_STAGING_FSROOT}/usr/bin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/bin/head ${X_STAGING_FSROOT}/usr/bin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/bin/tail ${X_STAGING_FSROOT}/usr/bin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/bin/uname ${X_STAGING_FSROOT}/usr/bin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/bin/clear ${X_STAGING_FSROOT}/usr/bin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/bin/reset ${X_STAGING_FSROOT}/usr/bin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/bin/tput ${X_STAGING_FSROOT}/usr/bin/
-${INSTALL_SUID_BIN} ${X_DESTDIR}/usr/bin/passwd ${X_STAGING_FSROOT}/usr/bin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/sbin/chown ${X_STAGING_FSROOT}/usr/sbin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/bin/wall ${X_STAGING_FSROOT}/usr/bin/
-
-# cron
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/sbin/cron ${X_STAGING_FSROOT}/usr/sbin/
-${INSTALL_DEF_FILE} ${X_BASEDIR}/files/crontab ${X_STAGING_FSROOT}/c/etc/
-
-# syslog / logging
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/sbin/syslogd ${X_STAGING_FSROOT}/usr/sbin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/bin/logger ${X_STAGING_FSROOT}/usr/bin/
-
-# PCI tools
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/sbin/pciconf ${X_STAGING_FSROOT}/usr/sbin/
-# this file is huge, over 200kb compressed
-#${INSTALL_DEF_FILE} ${X_DESTDIR}/usr/share/misc/pci_vendors ${X_STAGING_FSROOT}/usr/share/misc/
-
-# GPIO tools
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/sbin/gpioctl ${X_STAGING_FSROOT}/usr/sbin/
-
-# editors are useful, honest!
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/bin/ee ${X_STAGING_FSROOT}/usr/bin/
-
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/bin/gzip ${X_STAGING_FSROOT}/usr/bin/
+#ARCHIVE
+if [ "${X_MFS_ARCHIVE}" = "yes" ]; then
+	MFSROOT_BIN_ROOT="${MFSROOT_BIN_ROOT}
+		usr/bin/cpio
+		usr/bin/gzip
+		usr/bin/tar"
+		
 ${INSTALL_DEF_LINK} /usr/bin/gzip ${X_STAGING_FSROOT}/usr/bin/gunzip
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/libexec/getty ${X_STAGING_FSROOT}/usr/libexec/
-
-# vmstat is useful
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/bin/vmstat ${X_STAGING_FSROOT}/usr/bin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/bin/systat ${X_STAGING_FSROOT}/usr/bin/
-${INSTALL_DEF_LIB} ${X_DESTDIR}/lib/libdevstat.so.7 ${X_STAGING_FSROOT}/lib/
-
-# devinfo is useful
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/sbin/devinfo ${X_STAGING_FSROOT}/usr/sbin/
-${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/libdevinfo.so.6 ${X_STAGING_FSROOT}/usr/lib/
-
-# top is useful too
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/bin/top ${X_STAGING_FSROOT}/usr/bin/
-
-# libraries are for grep, tar, cpio, df
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/bin/tar ${X_STAGING_FSROOT}/usr/bin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/bin/cpio ${X_STAGING_FSROOT}/usr/bin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/bin/grep ${X_STAGING_FSROOT}/usr/bin/
-${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/libgnuregex.so.5 ${X_STAGING_FSROOT}/usr/lib/
-${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/libbz2.so.4 ${X_STAGING_FSROOT}/usr/lib/
-${INSTALL_DEF_LIB} ${X_DESTDIR}/lib/libz.so.6 ${X_STAGING_FSROOT}/lib/
-${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/libarchive.so.7 ${X_STAGING_FSROOT}/usr/lib/
-${INSTALL_DEF_LIB} ${X_DESTDIR}/lib/libmd.so.6 ${X_STAGING_FSROOT}/lib/
-${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/liblzma.so.5 ${X_STAGING_FSROOT}/usr/lib/
-${INSTALL_DEF_LIB} ${X_DESTDIR}/lib/libxo.so.0 ${X_STAGING_FSROOT}/lib/
-
-# libraries for wlanstats, athstats
-${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/libprivatebsdstat.so.1 ${X_STAGING_FSROOT}/usr/lib/
-
-# dhclient is critical
-${INSTALL_DEF_BIN} ${X_DESTDIR}/sbin/dhclient ${X_STAGING_FSROOT}/sbin/dhclient
-${INSTALL_DEF_BIN} ${X_DESTDIR}/sbin/dhclient-script ${X_STAGING_FSROOT}/sbin/dhclient-script
-${INSTALL_DEF_FILE} ${X_DESTDIR}/etc/dhclient.conf ${X_STAGING_FSROOT}/c/etc
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/bin/cmp ${X_STAGING_FSROOT}/usr/bin/cmp
-${INSTALL_DEF_BIN} ${X_DESTDIR}/sbin/resolvconf ${X_STAGING_FSROOT}/sbin/resolvconf
-${INSTALL_DEF_BIN} ${X_DESTDIR}/libexec/resolvconf/libc ${X_STAGING_FSROOT}/libexec/resolvconf/libc
-${INSTALL_DEF_LIB} ${X_DESTDIR}/lib/casper/libcap_syslog.so.1 ${X_STAGING_FSROOT}/lib/casper/
-
-# network state tracking / management
-${INSTALL_DEF_BIN} ${X_BASEDIR}/files/state/openvpn-up ${X_STAGING_FSROOT}/c/etc/state/
-${INSTALL_DEF_BIN} ${X_BASEDIR}/files/state/openvpn-down ${X_STAGING_FSROOT}/c/etc/state/
-${INSTALL_DEF_FILE} ${X_BASEDIR}/files/dhclient-enter-hooks ${X_STAGING_FSROOT}/c/etc/
-${INSTALL_DEF_FILE} ${X_BASEDIR}/files/dhclient-exit-hooks ${X_STAGING_FSROOT}/c/etc/
-${INSTALL_DEF_BIN} ${X_BASEDIR}/files/ifup ${X_STAGING_FSROOT}/sbin/
-${INSTALL_DEF_BIN} ${X_BASEDIR}/files/ifdown ${X_STAGING_FSROOT}/sbin/
-
-# time management
-${INSTALL_DEF_BIN} ${X_DESTDIR}/bin/date ${X_STAGING_FSROOT}/bin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/sbin/ntpdate ${X_STAGING_FSROOT}/usr/sbin/
-
-# ath tools
-if [ "${X_MFS_ATHEROS}" == "yes" ]; then
-	${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/local/bin/ath_ee_v14_print ${X_STAGING_FSROOT}/usr/bin/
-	${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/local/bin/ath_prom_read ${X_STAGING_FSROOT}/usr/bin/
-	${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/local/bin/athdecode ${X_STAGING_FSROOT}/usr/bin/
-	${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/local/bin/athpeek ${X_STAGING_FSROOT}/usr/bin/
-	${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/local/bin/athregs ${X_STAGING_FSROOT}/usr/bin/
-	${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/local/bin/ath_ee_v4k_print ${X_STAGING_FSROOT}/usr/bin/
-	${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/local/bin/ath_ee_9300_print ${X_STAGING_FSROOT}/usr/bin/
-	${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/local/bin/athdebug ${X_STAGING_FSROOT}/usr/bin/
-	${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/local/bin/athkey ${X_STAGING_FSROOT}/usr/bin/
-	${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/local/bin/athpoke ${X_STAGING_FSROOT}/usr/bin/
-	${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/local/bin/athrd ${X_STAGING_FSROOT}/usr/bin/
-	${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/local/bin/athstats ${X_STAGING_FSROOT}/usr/bin/
-	${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/local/bin/athsurvey ${X_STAGING_FSROOT}/usr/bin/
-	${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/local/bin/athradar ${X_STAGING_FSROOT}/usr/bin/
-	${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/local/bin/athspectral ${X_STAGING_FSROOT}/usr/bin/
-	${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/local/bin/athaggrstats ${X_STAGING_FSROOT}/usr/bin/
-	${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/local/bin/athratestats ${X_STAGING_FSROOT}/usr/bin/
 fi
 
-# wlan tools
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/sbin/wlandebug ${X_STAGING_FSROOT}/usr/sbin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/local/bin/wlanstats ${X_STAGING_FSROOT}/usr/bin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/local/bin/wlanwatch ${X_STAGING_FSROOT}/usr/bin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/local/bin/wlanwds ${X_STAGING_FSROOT}/usr/bin/
+#ATHEROS
+if [ "${X_MFS_ATHEROS}" = "yes" ]; then
+	MFSROOT_BIN_ROOT="${MFSROOT_BIN_ROOT}
+		usr/local/bin/ath_ee_9300_print
+		usr/local/bin/ath_ee_v14_print
+		usr/local/bin/ath_ee_v4k_print
+		usr/local/bin/ath_prom_read
+		usr/local/bin/athaggrstats
+		usr/local/bin/athdebug
+		usr/local/bin/athdecode
+		usr/local/bin/athkey
+		usr/local/bin/athpeek
+		usr/local/bin/athpoke
+		usr/local/bin/athradar
+		usr/local/bin/athratestats
+		usr/local/bin/athrd
+		usr/local/bin/athregs
+		usr/local/bin/athspectral
+		usr/local/bin/athstats
+		usr/local/bin/athsurvey"
 
-# login and pam
-${INSTALL_SUID_BIN} ${X_DESTDIR}/usr/bin/login ${X_STAGING_FSROOT}/usr/bin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/sbin/pwd_mkdb ${X_STAGING_FSROOT}/usr/sbin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/bin/cap_mkdb ${X_STAGING_FSROOT}/usr/bin/
-
-${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/libpam.so.6 ${X_STAGING_FSROOT}/usr/lib/
-${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/libbsm.so.3 ${X_STAGING_FSROOT}/usr/lib/
-${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/pam_deny.so ${X_STAGING_FSROOT}/usr/lib
-${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/pam_group.so ${X_STAGING_FSROOT}/usr/lib
-${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/pam_lastlog.so ${X_STAGING_FSROOT}/usr/lib
-${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/pam_login_access.so ${X_STAGING_FSROOT}/usr/lib
-${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/pam_nologin.so ${X_STAGING_FSROOT}/usr/lib
-${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/pam_permit.so ${X_STAGING_FSROOT}/usr/lib
-${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/pam_rhosts.so ${X_STAGING_FSROOT}/usr/lib
-${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/pam_rootok.so ${X_STAGING_FSROOT}/usr/lib
-${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/pam_securetty.so ${X_STAGING_FSROOT}/usr/lib
-${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/pam_self.so ${X_STAGING_FSROOT}/usr/lib
-${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/pam_ssh.so ${X_STAGING_FSROOT}/usr/lib
-#fix
-${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/libprivatessh.so.5 ${X_STAGING_FSROOT}/usr/lib/
-${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/libprivateldns.so.5 ${X_STAGING_FSROOT}/usr/lib/
-#end
-${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/pam_unix.so ${X_STAGING_FSROOT}/usr/lib
-${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/libypclnt.so.4 ${X_STAGING_FSROOT}/usr/lib
-${INSTALL_DEF_FILE} ${X_DESTDIR}/etc/nsswitch.conf ${X_STAGING_FSROOT}/c/etc/nsswitch.conf
-${INSTALL_DEF_FILE} ${X_DESTDIR}/usr/share/misc/termcap ${X_STAGING_FSROOT}/usr/share/misc/
-${INSTALL_DEF_FILE} ${X_DESTDIR}/usr/share/tabset/vt100 ${X_STAGING_FSROOT}/usr/share/tabset/
-${INSTALL_DEF_FILE} ${X_BASEDIR}/files/pam.d/atrun ${X_STAGING_FSROOT}/c/etc/pam.d/
-${INSTALL_DEF_FILE} ${X_BASEDIR}/files/pam.d/cron ${X_STAGING_FSROOT}/c/etc/pam.d/
-${INSTALL_DEF_FILE} ${X_BASEDIR}/files/pam.d/ftp ${X_STAGING_FSROOT}/c/etc/pam.d/
-${INSTALL_DEF_FILE} ${X_BASEDIR}/files/pam.d/ftpd ${X_STAGING_FSROOT}/c/etc/pam.d/
-${INSTALL_DEF_FILE} ${X_BASEDIR}/files/pam.d/imap ${X_STAGING_FSROOT}/c/etc/pam.d/
-${INSTALL_DEF_FILE} ${X_BASEDIR}/files/pam.d/kde ${X_STAGING_FSROOT}/c/etc/pam.d/
-${INSTALL_DEF_FILE} ${X_BASEDIR}/files/pam.d/passwd ${X_STAGING_FSROOT}/c/etc/pam.d/
-${INSTALL_DEF_FILE} ${X_BASEDIR}/files/pam.d/pop3 ${X_STAGING_FSROOT}/c/etc/pam.d/
-${INSTALL_DEF_FILE} ${X_BASEDIR}/files/pam.d/rsh ${X_STAGING_FSROOT}/c/etc/pam.d/
-${INSTALL_DEF_FILE} ${X_BASEDIR}/files/pam.d/sshd ${X_STAGING_FSROOT}/c/etc/pam.d/
-${INSTALL_DEF_FILE} ${X_BASEDIR}/files/pam.d/su ${X_STAGING_FSROOT}/c/etc/pam.d/
-${INSTALL_DEF_FILE} ${X_BASEDIR}/files/pam.d/xdm ${X_STAGING_FSROOT}/c/etc/pam.d/
-${INSTALL_DEF_FILE} ${X_BASEDIR}/files/pam.d/login ${X_STAGING_FSROOT}/c/etc/pam.d/
-${INSTALL_DEF_FILE} ${X_BASEDIR}/files/pam.d/telnetd ${X_STAGING_FSROOT}/c/etc/pam.d/
-${INSTALL_DEF_FILE} ${X_BASEDIR}/files/pam.d/other ${X_STAGING_FSROOT}/c/etc/pam.d/
-${INSTALL_DEF_FILE} ${X_BASEDIR}/files/pam.d/system ${X_STAGING_FSROOT}/c/etc/pam.d/
-
-# remote access
-${INSTALL_SUID_BIN} ${X_DESTDIR}/usr/bin/su ${X_STAGING_FSROOT}/usr/bin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/bin/telnet ${X_STAGING_FSROOT}/usr/bin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/bin/tftp ${X_STAGING_FSROOT}/usr/bin/
-
-if [ "x${X_MFS_SFTP}" == "xyes" ]; then
-	${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/bin/sftp ${X_STAGING_FSROOT}/usr/bin/
-	${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/libprivatessh.so.5 ${X_STAGING_FSROOT}/usr/lib/
-	${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/libprivateldns.so.5 ${X_STAGING_FSROOT}/usr/lib/
+	MFSROOT_BIN_FILES="${MFSROOT_BIN_FILES}
+		c/etc/rc.d/net/ath"
 fi
 
-# kerberos libraries needed for telnet/telnetd
-if [ "x${X_MFS_KERBEROS}" == "xyes" ]; then
-	${INSTALL_DEF_LIB}  ${X_DESTDIR}/usr/lib/libkrb5.so.11 ${X_STAGING_FSROOT}/usr/lib
-	${INSTALL_DEF_LIB}  ${X_DESTDIR}/usr/lib/libwind.so.11 ${X_STAGING_FSROOT}/usr/lib
-	${INSTALL_DEF_LIB}  ${X_DESTDIR}/usr/lib/libheimbase.so.11 ${X_STAGING_FSROOT}/usr/lib
-	${INSTALL_DEF_LIB}  ${X_DESTDIR}/usr/lib/libprivateheimipcc.so.11 ${X_STAGING_FSROOT}/usr/lib
-	${INSTALL_DEF_LIB}  ${X_DESTDIR}/usr/lib/libhx509.so.11 ${X_STAGING_FSROOT}/usr/lib
-	${INSTALL_DEF_LIB}  ${X_DESTDIR}/usr/lib/libasn1.so.11 ${X_STAGING_FSROOT}/usr/lib
-	${INSTALL_DEF_LIB}  ${X_DESTDIR}/usr/lib/libcom_err.so.5 ${X_STAGING_FSROOT}/usr/lib
-	${INSTALL_DEF_LIB}  ${X_DESTDIR}/usr/lib/libroken.so.11 ${X_STAGING_FSROOT}/usr/lib
+#AUTH - authentification: login, passwd
+if [ "${X_MFS_AUTH}" = "yes" ]; then
+	MFSROOT_SUID_ROOT="${MFSROOT_SUID_ROOT}
+		usr/bin/login
+		usr/bin/passwd
+		usr/bin/su
+		"
+		
+	MFSROOT_FILE_FILES="${MFSROOT_FILE_FILES}
+		c/etc/pam.d/atrun
+		c/etc/pam.d/ftp
+		c/etc/pam.d/ftpd
+		c/etc/pam.d/imap
+		c/etc/pam.d/kde
+		c/etc/pam.d/passwd
+		c/etc/pam.d/pop3
+		c/etc/pam.d/rsh
+		c/etc/pam.d/sshd
+		c/etc/pam.d/su
+		c/etc/pam.d/xdm
+		c/etc/pam.d/login
+		c/etc/pam.d/telnetd
+		c/etc/pam.d/other
+		c/etc/pam.d/system
+		"
+	MFSROOT_LIB_ROOT="${MFSROOT_LIB_ROOT}
+		usr/lib/pam_self.so
+		usr/lib/pam_nologin.so
+		usr/lib/pam_unix.so
+		usr/lib/pam_login_access.so
+		usr/lib/pam_lastlog.so
+		"
 fi
 
-#usb
-if [ "${X_MFS_USB}" == "yes" ]; then
-	${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/sbin/usbconfig ${X_STAGING_FSROOT}/usr/sbin/
-	${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/libusb.so.3 ${X_STAGING_FSROOT}/usr/lib/
+#CRON
+if [ "${X_MFS_CRON}" = "yes" ]; then
+	MFSROOT_BIN_ROOT="${MFSROOT_BIN_ROOT}
+		usr/sbin/cron"
+
+	MFSROOT_BIN_FILES="${MFSROOT_BIN_FILES}
+		c/etc/rc.d/srv/cron"
+
+	MFSROOT_FILE_FILES="${MFSROOT_FILE_FILES}
+		c/etc/crontab
+		c/etc/pam.d/cron"
 fi
 
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/sbin/inetd ${X_STAGING_FSROOT}/usr/sbin/
-${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/libwrap.so.6 ${X_STAGING_FSROOT}/usr/lib/
-${INSTALL_DEF_FILE} ${X_BASEDIR}/files/inetd.conf ${X_STAGING_FSROOT}/c/etc/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/libexec/telnetd ${X_STAGING_FSROOT}/usr/libexec/
+#NTP
+if [ "${X_MFS_NTP}" = "yes" ]; then
+	MFSROOT_BIN_ROOT="${MFSROOT_BIN_ROOT}
+		usr/sbin/ntpdate"
 
-# networking
-${INSTALL_DEF_BIN} ${X_DESTDIR}/sbin/ifconfig ${X_STAGING_FSROOT}/sbin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/sbin/route ${X_STAGING_FSROOT}/sbin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/sbin/ping ${X_STAGING_FSROOT}/sbin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/bin/netstat ${X_STAGING_FSROOT}/usr/bin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/sbin/arp ${X_STAGING_FSROOT}/usr/sbin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/sbin/tcpdump ${X_STAGING_FSROOT}/usr/sbin/
+	MFSROOT_BIN_FILES="${MFSROOT_BIN_FILES}
+		c/etc/rc.d/srv/ntpdate"
+fi
 
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/sbin/hostapd ${X_STAGING_FSROOT}/usr/sbin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/sbin/hostapd_cli ${X_STAGING_FSROOT}/usr/sbin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/sbin/wpa_supplicant ${X_STAGING_FSROOT}/usr/sbin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/sbin/wpa_cli ${X_STAGING_FSROOT}/usr/sbin/
+#DEV
+if [ "${X_MFS_DEV}" = "yes" ]; then
+	MFSROOT_BIN_ROOT="${MFSROOT_BIN_ROOT}
+		usr/sbin/devctl
+		usr/sbin/devinfo"
+fi
 
+#DHCP
+if [ "${X_MFS_DHCP}" = "yes" ]; then
+	MFSROOT_BIN_ROOT="${MFSROOT_BIN_ROOT}
+		sbin/dhclient
+		sbin/dhclient-script"
+
+	MFSROOT_BIN_FILES="${MFSROOT_BIN_FILES}
+		c/etc/rc.d/srv/cron"
+
+	MFSROOT_FILE_FILES="${MFSROOT_FILE_FILES}
+		c/etc/dhclient-enter-hooks
+		c/etc/dhclient-exit-hooks"
+
+	${INSTALL_DEF_FILE} ${X_DESTDIR}/etc/dhclient.conf ${X_STAGING_FSROOT}/c/etc
+fi
+#FS
+if [ "${X_MFS_FS}" = "yes" ]; then
+	MFSROOT_BIN_ROOT="${MFSROOT_BIN_ROOT}
+		sbin/fsck
+		sbin/fsck_ffs
+		sbin/fsck_ufs
+		sbin/mdconfig
+		sbin/mount
+		sbin/mount_mfs
+		sbin/newfs
+		sbin/umount"
+
+	MFSROOT_BIN_FILES="${MFSROOT_BIN_FILES}"
+
+	MFSROOT_FILE_FILES="${MFSROOT_FILE_FILES}
+		etc/fstab"
+fi
+#DIAG
+if [ "${X_MFS_DIAG}" = "yes" ]; then
+	MFSROOT_BIN_ROOT="${MFSROOT_BIN_ROOT}
+		usr/bin/ktrdump
+		usr/bin/ktrace
+		usr/bin/truss"
+fi
+
+#DIAG_NET
+if [ "${X_MFS_DIAG_NET}" = "yes" ]; then
+	MFSROOT_BIN_ROOT="${MFSROOT_BIN_ROOT}
+		usr/sbin/tcpdump"
+fi
+
+#ETH
+if [ "${X_MFS_ETH}" = "yes" ]; then
+	MFSROOT_BIN_ROOT="${MFSROOT_BIN_ROOT}
+		sbin/etherswitchcfg
+		sbin/ifconfig"
+
+	MFSROOT_BIN_FILES="${MFSROOT_BIN_FILES}
+		sbin/ifdown
+		sbin/ifup
+		c/etc/rc.d/base/net
+		c/etc/rc.d/net/bridge
+		c/etc/rc.d/net/ether
+		c/etc/rc.d/net/etherswitch
+		c/etc/rc.d/net/vlan"
+fi
+#FAT
+if [ "${X_MFS_FAT}" = "yes" ]; then
+	MFSROOT_BIN_ROOT="${MFSROOT_BIN_ROOT}
+		sbin/mount_msdosfs"
+fi
+#FW
+if [ "${X_MFS_FW}" = "yes" ]; then
+	MFSROOT_BIN_ROOT="${MFSROOT_BIN_ROOT}
+		sbin/ipfw"
+
+	MFSROOT_BIN_FILES="${MFSROOT_BIN_FILES}
+		c/etc/rc.d/base/firewall"
+fi
+#GPIO
+if [ "${X_MFS_GPIO}" = "yes" ]; then
+	MFSROOT_BIN_ROOT="${MFSROOT_BIN_ROOT}
+		usr/sbin/gpioctl"
+fi
+#KLD
+if [ "${X_MFS_KLD}" = "yes" ]; then
+	MFSROOT_BIN_ROOT="${MFSROOT_BIN_ROOT}
+		sbin/kldload
+		sbin/kldstat
+		sbin/kldunload"
+fi
+#LOG
+if [ "${X_MFS_LOG}" = "yes" ]; then
+	MFSROOT_BIN_ROOT="${MFSROOT_BIN_ROOT}
+		usr/sbin/syslogd"
+
+	MFSROOT_BIN_FILES="${MFSROOT_BIN_FILES}
+		c/etc/rc.d/srv/syslogd"
+
+	MFSROOT_FILE_FILES="${MFSROOT_FILE_FILES}"
+fi
+#NET
+if [ "${X_MFS_NET}" = "yes" ]; then
+	MFSROOT_BIN_ROOT="${MFSROOT_BIN_ROOT}
+		sbin/ping
+		sbin/route
+		sbin/resolvconf
+		usr/bin/nc
+		usr/sbin/arp"
+
+	MFSROOT_BIN_FILES="${MFSROOT_BIN_FILES}
+		c/etc/rc.d/base/routing"
+fi
+#PCI
+if [ "${X_MFS_PCI}" = "yes" ]; then
+	MFSROOT_BIN_ROOT="${MFSROOT_BIN_ROOT}
+		usr/sbin/pciconf"
+fi
+#SFTP
+if [ "${X_MFS_SFTP}" = "yes" ]; then
+	MFSROOT_BIN_ROOT="${MFSROOT_BIN_ROOT}
+		usr/bin/sftp"
+fi
+#STAT
+if [ "${X_MFS_STAT}" = "yes" ]; then
+	MFSROOT_BIN_ROOT="${MFSROOT_BIN_ROOT}
+		bin/ps
+		usr/bin/top
+		usr/bin/netstat
+		usr/bin/procstat
+		usr/bin/systat
+		usr/bin/vmstat
+		usr/sbin/pmccontrol
+		usr/sbin/pmcstat
+		usr/sbin/prometheus_sysctl_exporter"
+fi
+#TELNET
+if [ "${X_MFS_TELNET}" = "yes" ]; then
+	MFSROOT_BIN_ROOT="${MFSROOT_BIN_ROOT}
+		usr/bin/telnet
+		usr/libexec/telnetd"
+fi
+#USB
+if [ "${X_MFS_USB}" = "yes" ]; then
+	MFSROOT_BIN_ROOT="${MFSROOT_BIN_ROOT}
+		usr/sbin/usbconfig"
+fi
+#WLAN
+if [ "${X_MFS_WLAN}" = "yes" ]; then
+	MFSROOT_BIN_ROOT="${MFSROOT_BIN_ROOT}
+		usr/local/bin/wlanstats
+		usr/local/bin/wlanwatch
+		usr/local/bin/wlanwds
+		
+		usr/sbin/hostapd
+		usr/sbin/hostapd_cli
+		usr/sbin/wlandebug
+		usr/sbin/wpa_cli
+		usr/sbin/wpa_supplicant"
+
+	MFSROOT_BIN_FILES="${MFSROOT_BIN_FILES}
+		c/etc/rc.d/net/wifi
+		c/etc/rc.hostapd
+		c/etc/rc.wpa_ibss"
+
+	MFSROOT_FILE_FILES="${MFSROOT_FILE_FILES}"
+
+${INSTALL_DEF_FILE} ${X_DESTDIR}/etc/regdomain.xml ${X_STAGING_FSROOT}/c/etc/
+fi
+
+. ${SCRIPT_DIR}/build_mfscommon $1 || exit 1
+
+${INSTALL_DEF_LINK} /usr/bin/more ${X_STAGING_FSROOT}/usr/bin/less
+
+#libexec
 ${INSTALL_DEF_LIB} ${X_DESTDIR}/libexec/ld-elf.so.1 ${X_STAGING_FSROOT}/libexec/
 
-${INSTALL_DEF_LIB} ${X_DESTDIR}/lib/libc.so.7 ${X_STAGING_FSROOT}/lib/
-${INSTALL_DEF_LIB} ${X_DESTDIR}/lib/libedit.so.7 ${X_STAGING_FSROOT}/lib/
-${INSTALL_DEF_LIB} ${X_DESTDIR}/lib/libncurses.so.8 ${X_STAGING_FSROOT}/lib/
-${INSTALL_DEF_LIB} ${X_DESTDIR}/lib/libncursesw.so.8 ${X_STAGING_FSROOT}/lib/
-${INSTALL_DEF_LIB} ${X_DESTDIR}/lib/libcrypt.so.5 ${X_STAGING_FSROOT}/lib/
-${INSTALL_DEF_LIB} ${X_DESTDIR}/lib/libgcc_s.so.1 ${X_STAGING_FSROOT}/lib/
-${INSTALL_DEF_LIB} ${X_DESTDIR}/lib/libbsdxml.so.4 ${X_STAGING_FSROOT}/lib/
-${INSTALL_DEF_LIB} ${X_DESTDIR}/lib/libsbuf.so.6 ${X_STAGING_FSROOT}/lib/
-# install ${X_DESTDIR}/lib/libipx.so.5 ${X_STAGING_FSROOT}/lib/
-${INSTALL_DEF_LIB} ${X_DESTDIR}/lib/libutil.so.9 ${X_STAGING_FSROOT}/lib/
-${INSTALL_DEF_LIB} ${X_DESTDIR}/lib/libkiconv.so.4 ${X_STAGING_FSROOT}/lib/
-${INSTALL_DEF_LIB} ${X_DESTDIR}/lib/libkvm.so.7 ${X_STAGING_FSROOT}/lib/
-${INSTALL_DEF_LIB} ${X_DESTDIR}/lib/libnv.so.0 ${X_STAGING_FSROOT}/lib/
-${INSTALL_DEF_LIB} ${X_DESTDIR}/lib/libpcap.so.8 ${X_STAGING_FSROOT}/lib/
-${INSTALL_DEF_LIB} ${X_DESTDIR}/lib/libcrypto.so.8 ${X_STAGING_FSROOT}/lib/
-${INSTALL_DEF_LIB} ${X_DESTDIR}/lib/libm.so.5 ${X_STAGING_FSROOT}/lib/
-${INSTALL_DEF_LIB} ${X_DESTDIR}/lib/libipsec.so.4 ${X_STAGING_FSROOT}/lib/
-${INSTALL_DEF_LIB} ${X_DESTDIR}/lib/libthr.so.3 ${X_STAGING_FSROOT}/lib/
-${INSTALL_DEF_LIB} ${X_DESTDIR}/lib/libjail.so.1 ${X_STAGING_FSROOT}/lib/
-${INSTALL_DEF_LIB} ${X_DESTDIR}/lib/lib80211.so.1 ${X_STAGING_FSROOT}/lib/
-${INSTALL_DEF_LIB} ${X_DESTDIR}/lib/libcasper.so.1 ${X_STAGING_FSROOT}/lib/
-${INSTALL_DEF_LIB} ${X_DESTDIR}/lib/casper/libcap_dns.so.1 ${X_STAGING_FSROOT}/lib/casper
-
-${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/libmemstat.so.3 ${X_STAGING_FSROOT}/usr/lib/
-${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/libnetgraph.so.4 ${X_STAGING_FSROOT}/usr/lib/
-${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/libssl.so.8 ${X_STAGING_FSROOT}/usr/lib/
-${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/libmp.so.7 ${X_STAGING_FSROOT}/usr/lib/
-
-# libgpio is a stand alone library now, needed for gpioctl
-${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/libgpio.so.0 ${X_STAGING_FSROOT}/usr/lib/
-
-# RC script
-${INSTALL_DEF_BIN} ${X_BASEDIR}/files/rc ${X_STAGING_FSROOT}/etc/
-
-# The rest of etc goes into /c/etc and is copied at startup
-${INSTALL_DEF_BIN} ${X_BASEDIR}/files/rc2 ${X_STAGING_FSROOT}/c/etc/
-
-# local etc stuff - eg local password file
+#base to c/etc
+${INSTALL_DEF_FILE} ${X_DESTDIR}/etc/nsswitch.conf ${X_STAGING_FSROOT}/c/etc/nsswitch.conf
 ${INSTALL_DEF_FILE} ${X_DESTDIR}/etc/login.conf ${X_STAGING_FSROOT}/c/etc/
-${INSTALL_DEF_FILE} ${X_BASEDIR}/files/gettytab ${X_STAGING_FSROOT}/c/etc/
-${INSTALL_DEF_FILE} ${X_BASEDIR}/files/passwd ${X_STAGING_FSROOT}/c/etc/
-# XXX perms?
-${INSTALL_DEF_FILE} ${X_BASEDIR}/files/master.passwd ${X_STAGING_FSROOT}/c/etc/
-${INSTALL_DEF_FILE} ${X_BASEDIR}/files/group ${X_STAGING_FSROOT}/c/etc/
-${INSTALL_DEF_FILE} ${X_BASEDIR}/files/manifest ${X_STAGING_FSROOT}/c/etc/cfg/
-${INSTALL_DEF_FILE} ${X_BASEDIR}/files/rc.conf.default ${X_STAGING_FSROOT}/c/etc/
-
-# pmc
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/sbin/pmcstat ${X_STAGING_FSROOT}/usr/sbin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/sbin/pmccontrol ${X_STAGING_FSROOT}/usr/sbin/
-${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/libpmc.so.5 ${X_STAGING_FSROOT}/usr/lib/
-${INSTALL_DEF_LIB} ${X_DESTDIR}/lib/libelf.so.2 ${X_STAGING_FSROOT}/usr/lib/
-#pmc* requires c++ libs... madness.
-${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/libc++.so.1 ${X_STAGING_FSROOT}/usr/lib/
-${INSTALL_DEF_LIB} ${X_DESTDIR}/lib/libcxxrt.so.1 ${X_STAGING_FSROOT}/lib/
-
-# rc stuff
-${INSTALL_DEF_BIN} ${X_BASEDIR}/files/rc.subr ${X_STAGING_FSROOT}/c/etc/
-${INSTALL_DEF_BIN} ${X_BASEDIR}/files/rc.hostapd ${X_STAGING_FSROOT}/c/etc/
-${INSTALL_DEF_BIN} ${X_BASEDIR}/files/rc.wpa_ibss ${X_STAGING_FSROOT}/c/etc/
-${INSTALL_DEF_BIN} ${X_BASEDIR}/files/rc.d/base/net ${X_STAGING_FSROOT}/c/etc/rc.d/base/
-${INSTALL_DEF_BIN} ${X_BASEDIR}/files/rc.d/base/srv ${X_STAGING_FSROOT}/c/etc/rc.d/base/
-${INSTALL_DEF_BIN} ${X_BASEDIR}/files/rc.d/base/sysctl ${X_STAGING_FSROOT}/c/etc/rc.d/base/
-${INSTALL_DEF_BIN} ${X_BASEDIR}/files/rc.d/base/firewall ${X_STAGING_FSROOT}/c/etc/rc.d/base/
-${INSTALL_DEF_BIN} ${X_BASEDIR}/files/rc.d/base/routing ${X_STAGING_FSROOT}/c/etc/rc.d/base/
-
-${INSTALL_DEF_BIN} ${X_BASEDIR}/files/rc.d/net/ether ${X_STAGING_FSROOT}/c/etc/rc.d/net/
-${INSTALL_DEF_BIN} ${X_BASEDIR}/files/rc.d/net/bridge ${X_STAGING_FSROOT}/c/etc/rc.d/net/
-${INSTALL_DEF_BIN} ${X_BASEDIR}/files/rc.d/net/ath ${X_STAGING_FSROOT}/c/etc/rc.d/net/
-${INSTALL_DEF_BIN} ${X_BASEDIR}/files/rc.d/net/wifi ${X_STAGING_FSROOT}/c/etc/rc.d/net/
-${INSTALL_DEF_BIN} ${X_BASEDIR}/files/rc.d/net/vlan ${X_STAGING_FSROOT}/c/etc/rc.d/net/
-${INSTALL_DEF_BIN} ${X_BASEDIR}/files/rc.d/net/etherswitch ${X_STAGING_FSROOT}/c/etc/rc.d/net/
-
-${INSTALL_DEF_BIN} ${X_BASEDIR}/files/rc.d/srv/inetd ${X_STAGING_FSROOT}/c/etc/rc.d/srv/
-${INSTALL_DEF_BIN} ${X_BASEDIR}/files/rc.d/srv/cron ${X_STAGING_FSROOT}/c/etc/rc.d/srv/
-${INSTALL_DEF_BIN} ${X_BASEDIR}/files/rc.d/srv/ntpdate ${X_STAGING_FSROOT}/c/etc/rc.d/srv/
-${INSTALL_DEF_BIN} ${X_BASEDIR}/files/rc.d/srv/syslogd ${X_STAGING_FSROOT}/c/etc/rc.d/srv/
-
-# config save/load scripts
-${INSTALL_DEF_BIN} ${X_BASEDIR}/files/cfg_save ${X_STAGING_FSROOT}/bin
-${INSTALL_DEF_BIN} ${X_BASEDIR}/files/cfg_load ${X_STAGING_FSROOT}/bin
-
-# stuff that goes into /c/etc
-${INSTALL_DEF_FILE} ${X_DESTDIR}/etc/regdomain.xml ${X_STAGING_FSROOT}/c/etc/
 ${INSTALL_DEF_FILE} ${X_DESTDIR}/etc/services ${X_STAGING_FSROOT}/c/etc/
 ${INSTALL_DEF_FILE} ${X_DESTDIR}/etc/protocols ${X_STAGING_FSROOT}/c/etc/
-
 # this is needed for inetd
 ${INSTALL_DEF_FILE} ${X_DESTDIR}/etc/netconfig ${X_STAGING_FSROOT}/c/etc/
 
-# monitoring
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/sbin/prometheus_sysctl_exporter	${X_STAGING_FSROOT}/usr/sbin/
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/bin/procstat			${X_STAGING_FSROOT}/usr/bin/
-${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/libprocstat.so.1		${X_STAGING_FSROOT}/usr/lib/
+${INSTALL_DEF_FILE} ${X_DESTDIR}/usr/share/misc/termcap ${X_STAGING_FSROOT}/usr/share/misc/
+${INSTALL_DEF_FILE} ${X_DESTDIR}/usr/share/tabset/vt100 ${X_STAGING_FSROOT}/usr/share/tabset/
 
-# checksum
-${INSTALL_DEF_BIN} ${X_DESTDIR}/sbin/sha1 ${X_STAGING_FSROOT}/sbin/
-
-# ktr
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/bin/ktrdump ${X_STAGING_FSROOT}/usr/bin/
-
-# devctl
-${INSTALL_DEF_BIN} ${X_DESTDIR}/usr/sbin/devctl ${X_STAGING_FSROOT}/usr/sbin/
-${INSTALL_DEF_LIB} ${X_DESTDIR}/usr/lib/libdevctl.so.5 ${X_STAGING_FSROOT}/usr/lib/
-
-# Local board setup
-echo "# Configuration for: ${KERNCONF}" > ${X_STAGING_TMPDIR}/board.cfg
-echo "CFG_PATH=\"${BIN_CFG_PARTITION}\"" >> ${X_STAGING_TMPDIR}/board.cfg
-echo "CFG_SIZE=\"${BIN_CFG_SIZE}\"" >> ${X_STAGING_TMPDIR}/board.cfg
-echo "RECOVERY_PIN=\"${RECOVERY_PIN}\"" >> ${X_STAGING_TMPDIR}/board.cfg
-echo "RECOVERY_PIN_ACTIVE=\"${RECOVERY_PIN_ACTIVE}\"" >> ${X_STAGING_TMPDIR}/board.cfg
-
-${INSTALL_DEF_FILE} ${X_STAGING_TMPDIR}/board.cfg ${X_STAGING_FSROOT}/c/etc/
-
-# Local board rc.conf file - with system defaults
-cat ${X_BASEDIR}/files/rc.conf | sed "s|@DEF_ETH@|${X_CFG_DEFAULT_ETHER}|g" \
-    | sed "s|@DEF_HOSTNAME@|${X_CFG_DEFAULT_HOSTNAME}|" \
-    > ${X_STAGING_TMPDIR}/rc.conf
-${INSTALL_DEF_FILE} ${X_STAGING_TMPDIR}/rc.conf ${X_STAGING_FSROOT}/c/etc/cfg/
-
-# Set the console tty
-cat ${X_BASEDIR}/files/ttys | sed "s|@DEF_TTY@|${X_CFG_DEFAULT_TTY}|" \
-    > ${X_STAGING_TMPDIR}/ttys
-${INSTALL_DEF_FILE} ${X_STAGING_TMPDIR}/ttys ${X_STAGING_FSROOT}/c/etc/
-
-# kernel modules - if required
-if [ "${MFSROOT_INC_MODULES}" = "YES" ]; then
-	echo "*** Including modules.."
-
-	for i in ${MFSROOT_INC_MODULE_LIST}; do
-		${INSTALL_DEF_KLD} ${X_DESTDIR}/boot/kernel.${KERNCONF}/${i}.ko ${X_STAGING_FSROOT}/boot/kernel/ || exit 1
-	done
-fi
-
-#dtb - if required
-if [ "${MFSROOT_INC_DTB}" = "YES" ]; then
-	echo "*** Including DTB.."
-
-	for i in ${MFSROOT_INC_DTB_LIST}; do
-		${INSTALL_DEF_FILE} ${X_DESTDIR}/boot/dtb/${i}.dtb ${X_STAGING_FSROOT}/boot/dtb/ || exit 1
-	done
-fi
-
-# kernel - if required
-if [ "${MFSROOT_INC_KERNEL}" = "YES" ]; then
-	echo "*** Including kernel.."
-	${INSTALL_DEF_KLD} ${X_DESTDIR}/boot/kernel.${KERNCONF}/kernel ${X_STAGING_FSROOT}/boot/kernel/ || exit 1
-fi
+echo "${X_ROOTFS_DEV} / ufs rw 1 1" >> ${X_STAGING_FSROOT}/etc/fstab
